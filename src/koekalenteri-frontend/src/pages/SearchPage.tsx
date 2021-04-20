@@ -1,9 +1,17 @@
+import { Container } from '@material-ui/core';
 import React from 'react';
-import Header from '../components/Header';
+import InfoContainer from '../components/InfoContainer';
+import NotificationContainer from '../components/NotificationContainer';
+import MainContainer from '../components/MainContainer';
 
 const SearchPage = () => {
     return(
-        <Header></Header>
+        <Container maxWidth="md">
+            <NotificationContainer />
+            <InfoContainer/>
+            <MainContainer/>
+        </Container>
+
     )
 }
 

@@ -30,7 +30,7 @@ const Header = () => {
                         </IconButton>
                     </Link>
                     <Typography className={classes.title} variant="h6">
-                        Tervetuloa koekalenteriin
+                        Welcome
                     </Typography>
                     <IconButton onClick={() => { alert('clicked') }}> 
                         <AccountBox />

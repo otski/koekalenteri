@@ -1,10 +1,12 @@
 import React from 'react';
-import SearchPage from '../src/pages/SearchPage';
+import Header from '../src/components/Header';
+import SearchPage from '../src/pages/SearchPage'
 
 
 function App() {
   return (
     <div>
+      <Header/>
       <SearchPage/>
     </div>
   );
