@@ -18,4 +18,10 @@ jobs:
           cd src/koekalenteri-frontend
           npm ci
           npm run build
-          npm test
+          npm test -- --coverage
+      - name: Coveralls GitHub Action
+        uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-path: ./src/koekalenteri-frontend
+          path-to-lcov: ./src/koekalenteri-frontend/coverage/lcov.info
