@@ -26,7 +26,7 @@ const EventText = () => {
       </Typography>  
       <List >
         {events.map((event) => (
-          <ListItem button>
+          <ListItem button  key={event.id}>
             <Grid container spacing={3} justify="space-around" >
               <Grid item sm>
                 <Typography variant="h6" >
