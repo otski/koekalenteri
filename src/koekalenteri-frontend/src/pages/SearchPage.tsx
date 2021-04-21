@@ -5,14 +5,14 @@ import NotificationContainer from '../components/NotificationContainer';
 import MainContainer from '../components/MainContainer';
 
 const SearchPage = () => {
-    return(
-        <Container maxWidth="md">
-            <NotificationContainer />
-            <InfoContainer/>
-            <MainContainer/>
-        </Container>
+  return(
+    <Container maxWidth="md">
+      <NotificationContainer />
+      <InfoContainer/>
+      <MainContainer/>
+    </Container>
 
-    )
+  )
 }
 
 export default SearchPage;

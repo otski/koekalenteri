@@ -1,34 +1,32 @@
 import React from 'react';
-import { Container, Typography, Box, Paper } from '@material-ui/core';
+import { Container, Typography, Paper } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { useTheme } from '@material-ui/core/styles'
 
 const useStyles = makeStyles((theme) => ({
-    paper: {
-        margin: theme.spacing(1),
-        padding: theme.spacing(2),
-        textAlign: 'left',
-        color: theme.palette.text.secondary,
-    }
-  }));
+  paper: {
+    margin: theme.spacing(1),
+    padding: theme.spacing(2),
+    textAlign: 'left',
+    color: theme.palette.text.secondary,
+  }
+}));
 
 const InfoContainer = () => {
-    const classes = useStyles();
-    const theme = useTheme();
+  const classes = useStyles();
 
-    return (
-        <Container maxWidth="md">
-            <Paper elevation={1} className={classes.paper}>
-                <Typography variant="h4" >
+  return (
+    <Container maxWidth="md">
+      <Paper elevation={1} className={classes.paper}>
+        <Typography variant="h4" >
                 Koekalenteri mainos
-                </Typography>
-                <Typography variant="caption" >
+        </Typography>
+        <Typography variant="caption" >
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                </Typography>
-            </Paper>
-        </Container>
-    )
+        </Typography>
+      </Paper>
+    </Container>
+  )
 }
 
 export default InfoContainer;

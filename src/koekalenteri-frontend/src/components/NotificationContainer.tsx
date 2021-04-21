@@ -1,15 +1,15 @@
 import React from 'react';
-import { Container, Typography, Box } from '@material-ui/core';
+import { Container, Typography } from '@material-ui/core';
 
 const NotificationContainer = () => {
 
-    return (
-        <div>
-            <Typography variant="caption" >
+  return (
+    <Container>
+      <Typography variant="caption" >
                 Here are notifications, if needed
-            </Typography>  
-        </div>
-    )
+      </Typography>  
+    </Container>
+  )
 }
 
 export default NotificationContainer;
