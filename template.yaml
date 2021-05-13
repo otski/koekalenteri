@@ -97,10 +97,10 @@ Resources:
       KeySchema:
           - AttributeName: id
             KeyType: HASH
-          - AttributeName: event-type
+          - AttributeName: eventType
             KeyType: RANGE
       AttributeDefinitions:
-          - AttributeName: event-type
+          - AttributeName: eventType
             AttributeType: S
           - AttributeName: id
             AttributeType: S
