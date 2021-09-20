@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { Typography, List, ListItem, Grid, Container } from '@material-ui/core';
+import { Typography, List, ListItem, Grid, Container } from '@mui/material';
 import { Event } from "koekalenteri-shared/model/Event";
 
 type EventTextProps = {
@@ -9,14 +9,11 @@ type EventTextProps = {
 const EventText: FunctionComponent<EventTextProps> = ({events}) => {
 
   return (
-    <Container maxWidth="md">
-      <Typography variant="h4" >
-                Incoming events
-      </Typography>
+    <Container>
       <List >
         {events.map((event) => (
-          <ListItem button  key={event.id}>
-            <Grid container spacing={3} justify="space-around" >
+          <ListItem button key={event.id}>
+            <Grid container spacing={3} justifyContent="space-around" >
               <Grid item sm>
                 <Typography variant="h6" >
                   {event.startDate}
@@ -42,7 +39,7 @@ const EventText: FunctionComponent<EventTextProps> = ({events}) => {
         ))}
       </List>
     </Container>
-  )
+  );
 }
 
 export default EventText;

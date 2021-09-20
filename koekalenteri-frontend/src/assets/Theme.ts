@@ -1,7 +1,12 @@
-import { red } from '@material-ui/core/colors';
-import { createMuiTheme } from '@material-ui/core/styles';
+import { red } from '@mui/material/colors';
+import { createTheme, Theme } from '@mui/material/styles';
 
-const theme = createMuiTheme({
+declare module '@mui/styles/defaultTheme' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface DefaultTheme extends Theme {}
+}
+
+const theme = createTheme({
   palette: {
     primary: {
       light: '#547463',
