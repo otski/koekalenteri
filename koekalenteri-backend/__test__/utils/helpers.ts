@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, SQSEvent } from "aws-lambda";
+import { APIGatewayProxyEvent } from "aws-lambda";
 
 const DEFAULT_OPTIONS = { method: "GET", headers: {}, query: {}, path: "/" }
 
@@ -21,12 +21,13 @@ export function constructAPIGwEvent(message: any, options: any = DEFAULT_OPTIONS
       authorizer: { name: '' },
       protocol: 'http',
       httpMethod: opts.method,
-      identity: { 
+      identity: {
         accessKey: '',
         accountId: '',
         apiKey: '',
         apiKeyId: '',
         caller: '',
+        clientCert: null,
         cognitoAuthenticationProvider: '',
         cognitoAuthenticationType: '',
         cognitoIdentityId: '',
@@ -35,7 +36,7 @@ export function constructAPIGwEvent(message: any, options: any = DEFAULT_OPTIONS
         user: '',
         userAgent: '',
         userArn: '',
-        sourceIp: '' 
+        sourceIp: ''
       },
       path: opts.path,
       stage: '',

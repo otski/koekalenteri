@@ -140,6 +140,31 @@ Resources:
       SSESpecification:
         SSEEnabled: false
 
+  JudgeTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join ['-', [judge-table, !Ref AWS::StackName]]
+      KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: name
+            KeyType: RANGE
+      AttributeDefinitions:
+          - AttributeName: name
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: N
+      Tags:
+        - Key: "env"
+          Value: !Ref AWS::StackName
+        - Key: "label"
+          Value: "koekalenteri"
+      ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+      SSESpecification:
+        SSEEnabled: false
+
   # TODO Rest of table definitions, maybe split tables into separate file?
 
   # API declaration
@@ -246,6 +271,32 @@ Resources:
             RestApiId: !Ref KoekalenteriApi
             Auth:
               Authorizer: CognitoAuthorizer
+
+  GetJudgesFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: koekalenteri-backend
+      Handler: dist/handlers/judge.getJudgesHandler
+      Layers:
+        - !Ref CommonLayer
+      Tracing: Active
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref JudgeTable
+        - CloudWatchPutMetricPolicy: {}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref JudgeTable
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+
+      Events:
+        GetJudges:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /judge
+            Method: get
+            RestApiId: !Ref KoekalenteriApi
+
   CommonLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -320,7 +371,6 @@ Resources:
               commands:
                 - cd koekalenteri-frontend
                 - npm ci
-                - npm run configure
                 - npm run build
           artifacts:
             baseDirectory: koekalenteri-frontend/build

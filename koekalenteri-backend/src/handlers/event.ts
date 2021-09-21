@@ -1,35 +1,33 @@
 import "source-map-support/register";
 import { v4 as uuidv4 } from 'uuid';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-const { metricScope } = require("aws-embedded-metrics");
+import { metricScope, MetricsLogger } from "aws-embedded-metrics";
 
 import CustomDynamoClient from "../utils/CustomDynamoClient";
 import { response } from "../utils/response";
 import { metricsSuccess, metricsError } from "../utils/metrics";
 import { Event } from "koekalenteri-shared/model/Event";
+import { AWSError } from "aws-sdk";
 
 const dynamoDB = new CustomDynamoClient();
 
-export const getEventsHandler = metricScope((metrics: any) =>
+export const getEventsHandler = metricScope((metrics: MetricsLogger) =>
   async (
     event: APIGatewayProxyEvent,
   ): Promise<APIGatewayProxyResult> => {
     try {
-      console.info(process.env.TABLE_NAME);
       const items = await dynamoDB.readAll();
       metricsSuccess(metrics, event.requestContext, "getEvents");
       return response(200, items);
     } catch (err) {
       console.error(err);
-      console.error(process.env.TABLE_NAME);
       metricsError(metrics, event.requestContext, "getEvents");
-      // @ts-ignore
-      return response(err.statusCode || 501, err);
+      return response((err as AWSError).statusCode || 501, err);
     }
   }
 );
 
-export const getEventHandler = metricScope((metrics: any) =>
+export const getEventHandler = metricScope((metrics: MetricsLogger) =>
   async (
     event: APIGatewayProxyEvent,
   ): Promise<APIGatewayProxyResult> => {
@@ -40,13 +38,12 @@ export const getEventHandler = metricScope((metrics: any) =>
     } catch (err) {
       console.error(err);
       metricsError(metrics, event.requestContext, "getEvent");
-      // @ts-ignore
-      return response(err.statusCode || 501, err);
+      return response((err as AWSError).statusCode || 501, err);
     }
   }
 );
 
-export const createEventHandler = metricScope((metrics: any) =>
+export const createEventHandler = metricScope((metrics: MetricsLogger) =>
   async (
     event: APIGatewayProxyEvent,
   ): Promise<APIGatewayProxyResult> => {
@@ -70,8 +67,7 @@ export const createEventHandler = metricScope((metrics: any) =>
     } catch (err) {
       console.error(err);
       metricsError(metrics, event.requestContext, "createEvent");
-      // @ts-ignore
-      return response(err.statusCode || 501, err);
+      return response((err as AWSError).statusCode || 501, err);
     }
   }
 );

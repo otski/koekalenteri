@@ -8,11 +8,12 @@
     "start-frontend": "cd koekalenteri-frontend && npm start",
     "start-dynamodb": "docker run --name dynamodb --network lambda-local -p 8000:8000 amazon/dynamodb-local",
     "start-sam": "sam local start-api -p 8080 --docker-network lambda-local",
-    "start": "concurrently npm:start-*"
+    "start": "shx rm -rf .aws-sam && concurrently npm:start-*"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^6.3.0"
+    "concurrently": "^6.3.0",
+    "shx": "^0.3.3"
   }
 }

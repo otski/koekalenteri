@@ -7,4 +7,4 @@ export const response = (statusCode: number, body: any): APIGatewayProxyResult =
     'Access-Control-Allow-Origin': '*',
     'Content-Type': 'application/json'
   },
-})
+});
