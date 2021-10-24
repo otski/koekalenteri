@@ -310,7 +310,7 @@ Resources:
   AmplifyApp:
     Type: "AWS::Amplify::App"
     Properties:
-      Name: KoekalenteriApp
+      Name: Koekalenteri
       Repository: !Ref Repository
       Description: Koekalenteri
       OauthToken: !Ref OauthToken
