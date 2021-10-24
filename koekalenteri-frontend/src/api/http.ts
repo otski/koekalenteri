@@ -1,7 +1,7 @@
-import config from '../config';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8080/'
 
 async function http<T>(path: string, init: RequestInit): Promise<T> {
-  const response = await fetch(config.api_base_url + path, init);
+  const response = await fetch(API_BASE_URL + path, init);
   if (!response.ok) {
     throw new Error(`${response.status} ${response.statusText}`);
   }
