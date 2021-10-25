@@ -28,6 +28,7 @@
     "web-vitals": "^2.1.0"
   },
   "scripts": {
+    "describe-stacks": "aws cloudformation describe-stacks --stack-name koekalenteri-dev --profile koekalenteri --query Stacks[0] > stack.json",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "lint": "eslint \"src/**/*{.ts,.tsx}\"",

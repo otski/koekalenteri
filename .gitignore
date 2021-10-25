@@ -106,3 +106,5 @@ dist
 # AWS SAM Build
 .aws-sam/
 samconfig.toml
+
+stack.json

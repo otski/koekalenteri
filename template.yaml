@@ -211,7 +211,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref EventTable
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-          ENDPOINT_OVERRIDE: ""
 
       Events:
         GetEvent:
@@ -237,7 +236,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref EventTable
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-          ENDPOINT_OVERRIDE: ""
 
       Events:
         CreateEvent:
@@ -321,7 +319,8 @@ Resources:
             build:
               commands:
                 - cd koekalenteri-frontend
-                - npm install
+                - npm ci
+                - npm run configure
                 - npm run build
           artifacts:
             baseDirectory: koekalenteri-frontend/build
