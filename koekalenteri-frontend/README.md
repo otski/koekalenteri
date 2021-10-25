@@ -19,6 +19,20 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
+By default, local backend is used. You can use alternative backed by defining `REACT_APP_API_BASE_URL` environment variable (deployed backends are a lot faster, because `sam` rebuilds the lambda for every request).
+
+For example (windows):
+
+```powershell
+($env:REACT_APP_API_BASE_URL = 'https://xyz.execute-api.eu-north-1.amazonaws.com/dev') -and (npm start)
+```
+
+*nix:
+
+```bash
+REACT_APP_API_BASE_URL=https://xyz.execute-api.eu-north-1.amazonaws.com/dev npm start
+```
+
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\

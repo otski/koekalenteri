@@ -1,6 +1,5 @@
 import { DatePicker } from "@mui/lab";
-import { FormControl, TextField } from "@mui/material";
-import { Fragment } from "react";
+import { Box, FormControl, TextField } from "@mui/material";
 
 type DateValue = Date | null;
 
@@ -27,8 +26,8 @@ export default function DateRange({ start, end, startLabel, endLabel, onChange }
   };
 
   return (
-    <Fragment>
-      <FormControl sx={{mr: 1, width: '45%', minWidth: 150}}>
+    <Box sx={{width: '100%'}}>
+      <FormControl sx={{pr: 0.5, width: '50%'}}>
         <DatePicker
           label={startLabel}
           value={start}
@@ -42,7 +41,7 @@ export default function DateRange({ start, end, startLabel, endLabel, onChange }
         />
       </FormControl>
 
-      <FormControl sx={{width: '45%', minWidth: 150}}>
+      <FormControl sx={{pl: 0.5, width: '50%'}}>
         <DatePicker
           label={endLabel}
           value={end}
@@ -55,6 +54,6 @@ export default function DateRange({ start, end, startLabel, endLabel, onChange }
           renderInput={(params) => <TextField {...params} />}
         />
       </FormControl>
-    </Fragment>
+    </Box>
   )
 }
