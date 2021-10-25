@@ -3,6 +3,7 @@ import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import DateRange, { DateRangeProps } from './DateRange';
+import { startOfMonth } from 'date-fns';
 
 const renderComponent = (props: DateRangeProps) => {
   const utils = render(
@@ -24,7 +25,7 @@ test('should render labels', () => {
 
 test('It should fire onChange', async () => {
   const changeHandler = jest.fn();
-  const { startInput, endInput } = renderComponent({ startLabel: 'start', start: new Date(), endLabel: 'end', end: null, onChange: changeHandler });
+  const { startInput, endInput } = renderComponent({ startLabel: 'start', start: startOfMonth(new Date()), endLabel: 'end', end: null, onChange: changeHandler });
 
   fireEvent.click(startInput);
   await waitFor(() => screen.getByRole('dialog'));

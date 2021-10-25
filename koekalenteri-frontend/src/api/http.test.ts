@@ -1,6 +1,5 @@
 import fetchMock from "jest-fetch-mock";
-import http from './http';
-import config from '../config';
+import http, {API_BASE_URL} from './http';
 
 fetchMock.enableMocks();
 
@@ -19,7 +18,7 @@ describe('http', () => {
 
       expect(json).toEqual('ok');
       expect(fetchMock.mock.calls.length).toEqual(1);
-      expect(fetchMock.mock.calls[0][0]).toEqual(config.api_base_url + '/test/');
+      expect(fetchMock.mock.calls[0][0]).toEqual(API_BASE_URL + '/test/');
     });
 
     it('should throw status + statusText', async () => {
@@ -42,7 +41,7 @@ describe('http', () => {
 
       expect(json).toEqual('ok');
       expect(fetchMock.mock.calls.length).toEqual(1);
-      expect(fetchMock.mock.calls[0][0]).toEqual(config.api_base_url + '/test/');
+      expect(fetchMock.mock.calls[0][0]).toEqual(API_BASE_URL + '/test/');
     });
 
     it('should throw status + statusText', async () => {
@@ -65,7 +64,7 @@ describe('http', () => {
 
       expect(json).toEqual('ok');
       expect(fetchMock.mock.calls.length).toEqual(1);
-      expect(fetchMock.mock.calls[0][0]).toEqual(config.api_base_url + '/test/');
+      expect(fetchMock.mock.calls[0][0]).toEqual(API_BASE_URL + '/test/');
     });
 
     it('should throw status + statusText', async () => {
@@ -88,7 +87,7 @@ describe('http', () => {
 
       expect(json).toEqual('ok');
       expect(fetchMock.mock.calls.length).toEqual(1);
-      expect(fetchMock.mock.calls[0][0]).toEqual(config.api_base_url + '/test/');
+      expect(fetchMock.mock.calls[0][0]).toEqual(API_BASE_URL + '/test/');
     });
 
     it('should throw status + statusText', async () => {
