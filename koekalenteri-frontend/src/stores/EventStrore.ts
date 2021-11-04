@@ -1,6 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 import * as eventApi from '../api/event';
-import { subDays, startOfDay } from 'date-fns';
+import { startOfDay } from 'date-fns';
 import { EventEx, extendEvent, extendEvents } from 'koekalenteri-shared';
 
 export type FilterProps = {
@@ -93,14 +93,13 @@ function withinSwitchFilters(event: EventEx, { withOpenEntry, withClosingEntry, 
     return true;
   }
   const entryStartDate = new Date(event.entryStartDate);
-  const entryEndDate = new Date(event.entryEndDate);
   const isOpenEntry = event.isEntryOpen;
   let result = false;
   if (withOpenEntry) {
     result = result || isOpenEntry;
   }
   if (withClosingEntry) {
-    result = result || (isOpenEntry && subDays(entryEndDate, 7) <= today);
+    result = result || event.isEntryClosing;
   }
   if (withUpcomingEntry) {
     result = result || entryStartDate > today;

@@ -22,11 +22,12 @@ i18n
     fallbackLng: "fi",
     supportedLngs: ['fi', 'en'],
     debug: process.env.NODE_ENV === 'development',
+    keySeparator: false, // flat json
     interpolation: {
       escapeValue: false
     }
   });
 
 //  additional formats
-i18n.services.formatter?.add('short', formatDate('P'));
+i18n.services.formatter?.add('short', formatDate('eeeeee d.M.'));
 i18n.services.formatter?.add('datespan', formatDateSpan);
