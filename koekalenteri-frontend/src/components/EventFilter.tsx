@@ -26,7 +26,10 @@ function MultiSelect(props: SelectProps<string[]> & { options: MultiSelectOption
     <Select
       {...props}
       multiple
-      renderValue={(selected) => selected.join(', ')}
+      renderValue={(selected) => props.options
+        .filter(opt => selected.includes(opt.value))
+        .map(opt => opt.name)
+        .join(', ')}
     >
       {props.options.map(({ value, name }) => (
         <MenuItem key={value} value={value}>

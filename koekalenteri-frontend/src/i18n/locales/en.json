@@ -16,5 +16,6 @@
   "organizer": "Organizer",
   "paymentDetails": "Payment details",
   "places": "Places",
-  "register": "Register"
+  "register": "Register",
+  "total_places": "places"
 }

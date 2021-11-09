@@ -52,7 +52,8 @@ export class EventStore {
 
   async load() {
     this.setLoading(true);
-    this._events = extendEvents(await eventApi.getEvents());
+    this._events = extendEvents(await eventApi.getEvents())
+      .sort((a: EventEx, b: EventEx) => +new Date(a.startDate) - +new Date(b.startDate));
     this._applyFilter();
     this.setLoading(false);
   }

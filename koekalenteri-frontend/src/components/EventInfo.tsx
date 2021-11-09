@@ -1,4 +1,4 @@
-import { Table, TableBody, TableRow, TableCell, Box } from '@mui/material';
+import { Table, TableBody, TableRow, TableCell, Box, Grid, TableHead } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { Event, EventClass, EventEx } from "koekalenteri-shared";
 import { useTranslation } from 'react-i18next';
@@ -7,14 +7,22 @@ const useRowStyles = makeStyles({
   root: {
     '& *': {
       borderBottom: 'unset',
-      padding: 4
+      padding: '2px 16px 2px 0'
     },
     '& th': {
       width: '1%',
       whiteSpace: 'nowrap',
       verticalAlign: 'top'
     },
+    '& td': {
+      whiteSpace: 'normal'
+    }
   },
+  classes: {
+    '& th': {
+      paddingRight: '4px'
+    }
+  }
 });
 
 function entryDateColor(event: EventEx) {
@@ -29,23 +37,13 @@ export function EventInfo(props: { event: EventEx }) {
   const classes = useRowStyles();
   const { t } = useTranslation();
   return (
-    <Box margin={1}>
+    <>
       <Table size="small" aria-label="details" className={classes.root}>
         <TableBody>
-          <TableRow key={event.id + 'title'} >
-            <TableCell component="th" scope="row" colSpan={2}>
-              {t('daterange', { start: event.startDate, end: event.endDate }) +
-                ' ' + event.location + (event.name ? ` (${event.name})` : '')}
-            </TableCell>
-          </TableRow>
-          <TableRow key={event.id + 'organizer'}>
-            <TableCell component="th" scope="row">{t('organizer')}:</TableCell>
-            <TableCell>{event.organizer?.name}</TableCell>
-          </TableRow>
           <TableRow key={event.id + 'date'}>
             <TableCell component="th" scope="row">{t('entryTime')}:</TableCell>
             <TableCell sx={{ color: entryDateColor(event) }}>
-              {t('daterange', { start: event.entryStartDate, end: event.entryEndDate })}
+              <b>{t('daterange', { start: event.entryStartDate, end: event.entryEndDate })}</b>
             </TableCell>
           </TableRow>
           <TableRow key={event.id + 'eventType'}>
@@ -78,7 +76,7 @@ export function EventInfo(props: { event: EventEx }) {
           </TableRow>
         </TableBody>
       </Table>
-    </Box>
+    </>
   );
 }
 
@@ -100,8 +98,9 @@ const eventClassKey = (eventId: string, eventClass: string | EventClass) =>
   eventId + 'class' + (typeof eventClass === 'string' ? eventClass : eventClass.date + eventClass.class);
 
 function EventClassTable({ event }: EventProps) {
+  const classes = useRowStyles();
   return (
-    <Table size="small">
+    <Table size="small" className={classes.classes}>
       <TableBody>
         {event.classes.map(eventClass =>
           <EventClassTableRow key={eventClassKey(event.id, eventClass)} eventClass={eventClass} />)}
@@ -134,7 +133,8 @@ function ComplexEventClass({ eventClass }: { eventClass: EventClass }) {
       <TableCell component="th" scope="row">{t('dateshort', { date: eventClass.date })}</TableCell>
       <TableCell component="th" scope="row">{eventClass.class}</TableCell>
       <TableCell component="th" scope="row">{eventClass.judge?.name}</TableCell>
-      <TableCell component="th" scope="row">{eventClass.entries}/{eventClass.places} ({eventClass.members})</TableCell>
+      <TableCell component="th" scope="row" align="right">{eventClass.entries}/{eventClass.places}</TableCell>
+      <TableCell component="th" scope="row" align="right">{eventClass.members}</TableCell>
       <TableCell></TableCell>
     </>
   );

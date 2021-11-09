@@ -22,5 +22,6 @@
   "organizer": "Järjestäjä",
   "paymentDetails": "Maksutiedot",
   "places": "Paikkoja",
-  "register": "Ilmoittaudu"
+  "register": "Ilmoittaudu",
+  "total_places": "paikkaa"
 }
