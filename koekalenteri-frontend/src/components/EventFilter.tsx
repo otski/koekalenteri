@@ -1,44 +1,16 @@
-import { Checkbox, FormControl, FormControlLabel, Grid, InputLabel, ListItemText, MenuItem, Select, SelectProps, Stack, Switch } from '@mui/material';
+import { FormControl, FormControlLabel, Grid, InputLabel, Stack, Switch } from '@mui/material';
 import { Box } from '@mui/system';
 import { Judge, Organizer } from 'koekalenteri-shared';
 import { useTranslation } from 'react-i18next';
 import { FilterProps } from '../stores/EventStrore';
 import { DateRange } from './DateRange';
+import { MultiSelect, stringsToMultiSelectOptions } from './MultiSelect';
 
 type EventFilterProps = {
   judges: Judge[],
   organizers: Organizer[],
   filter: FilterProps
   onChange?: (filter: FilterProps) => void
-}
-
-type MultiSelectOption = {
-  value: string,
-  name: string
-}
-
-function stringsToMultiSelectOptions(opts: string[]): MultiSelectOption[] {
-  return opts.map(o => ({ value: o, name: o }));
-}
-
-function MultiSelect(props: SelectProps<string[]> & { options: MultiSelectOption[] }) {
-  return (
-    <Select
-      {...props}
-      multiple
-      renderValue={(selected) => props.options
-        .filter(opt => selected.includes(opt.value))
-        .map(opt => opt.name)
-        .join(', ')}
-    >
-      {props.options.map(({ value, name }) => (
-        <MenuItem key={value} value={value}>
-          <Checkbox checked={props.value?.includes(value)} />
-          <ListItemText primary={name} />
-        </MenuItem>
-      ))}
-    </Select>
-  );
 }
 
 export function EventFilter({ judges, organizers, filter, onChange }: EventFilterProps) {
@@ -53,7 +25,7 @@ export function EventFilter({ judges, organizers, filter, onChange }: EventFilte
     <Box m={1}>
       <Grid container justifyContent="space-around" spacing={1}>
         <Grid item xs={12} md={6} xl={2}>
-          <DateRange start={filter.start} startLabel={t("daterange-start")} end={filter.end} endLabel={t("daterange-end")} onChange={(start, end) => setFilter({ start, end })}></DateRange>
+          <DateRange start={filter.start} startLabel={t("daterangeStart")} end={filter.end} endLabel={t("daterangeEnd")} onChange={(start, end) => setFilter({ start, end })}></DateRange>
         </Grid>
         <Grid item xs={6} md={3} xl>
           <FormControl sx={{ width: '100%' }}>
