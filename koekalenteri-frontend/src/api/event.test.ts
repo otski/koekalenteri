@@ -2,8 +2,8 @@ import fetchMock from 'jest-fetch-mock';
 import { parseISO } from "date-fns";
 import type { Event } from 'koekalenteri-shared/model';
 import { emptyEvent } from './test-utils/emptyEvent';
-import { getEvents, getEvent } from './event';
-import { API_BASE_URL } from './http';
+import { getEvents, getEvent, saveEvent } from './event';
+import { API_BASE_URL } from "../config";
 import { rehydrateEvent } from './utils';
 
 fetchMock.enableMocks();
@@ -32,6 +32,17 @@ test('getEvent', async () => {
   expect(event).toMatchObject(emptyEvent);
   expect(fetchMock.mock.calls.length).toEqual(1);
   expect(fetchMock.mock.calls[0][0]).toEqual(API_BASE_URL + '/event/TestEventType/TestEventID');
+});
+
+test('createEvent', async() => {
+  fetchMock.mockResponse(req => req.method === 'POST'
+    ? Promise.resolve(JSON.stringify(emptyEvent))
+    : Promise.reject(new Error(`${req.method} !== 'POST'`)));
+
+  const newEvent = await saveEvent({ eventType: 'TestEventType' });
+  expect(fetchMock.mock.calls.length).toEqual(1);
+  expect(fetchMock.mock.calls[0][0]).toEqual(API_BASE_URL + '/event/');
+  expect(newEvent.id).not.toBeUndefined();
 });
 
 /**

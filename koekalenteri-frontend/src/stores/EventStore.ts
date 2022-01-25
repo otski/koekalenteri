@@ -1,7 +1,7 @@
 import { makeAutoObservable } from 'mobx';
 import * as eventApi from '../api/event';
 import { startOfDay } from 'date-fns';
-import type { EventEx } from 'koekalenteri-shared/model';
+import type { Event, EventEx } from 'koekalenteri-shared/model';
 
 export type FilterProps = {
   start: Date | null
@@ -18,11 +18,13 @@ export type FilterProps = {
 
 export class EventStore {
   private _events: EventEx[] = [];
-  private _open: Record<string, boolean> = {};
 
   public loaded: boolean = false;
   public loading: boolean = false;
-  public events: EventEx[] = [];
+  public filteredEvents: EventEx[] = [];
+  public userEvents: EventEx[] = [];
+  public newEvent: Partial<Event> = {eventType: ''};
+  public selectedEvent: Event | undefined = undefined;
   public filter: FilterProps = {
     start: null,
     end: null,
@@ -51,12 +53,12 @@ export class EventStore {
     this.loaded = !value;
   }
 
-  setOpen(id: string, value: boolean) {
-    this._open[id] = value;
+  setNewEvent(event: Partial<Event>) {
+    this.newEvent = event;
   }
 
-  isOpen(id: string) {
-    return this._open[id] || false;
+  setSelectedEvent(event: EventEx|undefined) {
+    this.selectedEvent = event;
   }
 
   async load() {
@@ -64,6 +66,10 @@ export class EventStore {
     this._events = (await eventApi.getEvents())
       .sort((a: EventEx, b: EventEx) => +new Date(a.startDate) - +new Date(b.startDate));
     this._applyFilter();
+
+    // TODO
+    this.userEvents = this._events;
+
     this.setLoading(false);
   }
 
@@ -75,12 +81,33 @@ export class EventStore {
     return eventApi.getEvent(eventType, id, signal);
   }
 
+  async save(event: Partial<Event>) {
+    const newEvent = !event.id;
+    const saved = await eventApi.saveEvent(event);
+    if (newEvent) {
+      this.userEvents.push(saved);
+      this.newEvent = {eventType: ''};
+    }
+    return saved;
+  }
+
+  async delete(event: Event) {
+    const index = this.userEvents.findIndex(e => e.id === event.id);
+    if (index > -1) {
+      this.userEvents.splice(index, 1);
+      event.deletedAt = new Date();
+      event.deletedBy = 'user';
+      return this.save(event);
+    }
+  }
+
   private _applyFilter() {
     const today = startOfDay(new Date());
     const filter = this.filter;
 
-    this.events = this._events.filter(event => {
-      return withinDateFilters(event, filter)
+    this.filteredEvents = this._events.filter(event => {
+      return !event.deletedAt
+        && withinDateFilters(event, filter)
         && withinSwitchFilters(event, filter, today)
         && withinArrayFilters(event, filter);
     });
