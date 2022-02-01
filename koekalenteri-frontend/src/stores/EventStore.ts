@@ -87,6 +87,12 @@ export class EventStore {
     if (newEvent) {
       this.userEvents.push(saved);
       this.newEvent = {eventType: ''};
+    } else {
+      // Update cached instance (deleted events are not found)
+      const oldInstance = this.userEvents.find(e => e.id === event.id);
+      if (oldInstance) {
+        Object.assign(oldInstance, saved);
+      }
     }
     return saved;
   }
@@ -106,7 +112,7 @@ export class EventStore {
     const filter = this.filter;
 
     this.filteredEvents = this._events.filter(event => {
-      return !event.deletedAt
+      return event.state !== 'draft' && !event.deletedAt
         && withinDateFilters(event, filter)
         && withinSwitchFilters(event, filter, today)
         && withinArrayFilters(event, filter);
@@ -148,7 +154,7 @@ function withinArrayFilters(event: EventEx, { eventType, eventClass, judge, orga
   if (eventType.length && !eventType.includes(event.eventType)) {
     return false;
   }
-  if (eventClass.length && !eventClass.some(c => event.classes?.includes(c))) {
+  if (eventClass.length && !eventClass.some(c => event.classes.map(c => c.class).includes(c))) {
     return false;
   }
   if (judge.length && !judge.some(j => event.judges?.includes(j))) {

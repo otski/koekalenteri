@@ -8,10 +8,14 @@
   "classes": {
     "L": [
       {
-        "S": "ALO"
+        "class": {
+          "S": "ALO"
+        }
       },
       {
-        "S": "AVO"
+        "class": {
+          "S": "AVO"
+        }
       }
     ]
   },
@@ -90,5 +94,8 @@
   },
   "members": {
     "N": "3"
+  },
+  "state": {
+    "S": "confirmed"
   }
 }

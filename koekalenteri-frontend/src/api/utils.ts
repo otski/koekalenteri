@@ -18,11 +18,14 @@ export function rehydrateEvent(event: Event, now = new Date()): EventEx {
     event.deletedAt = new Date(event.deletedAt);
   }
 
-  for (const cls of event.classes || []) {
+  event.classes = event.classes || [];
+  event.judges = event.judges || [];
+
+  for (const cls of event.classes) {
     if (typeof cls === 'string') {
       continue;
     }
-    cls.date = new Date(cls.date);
+    cls.date = new Date(cls.date || event.startDate);
   }
 
   const isEntryOpen = startOfDay(event.entryStartDate) <= now && endOfDay(event.entryEndDate) >= now;

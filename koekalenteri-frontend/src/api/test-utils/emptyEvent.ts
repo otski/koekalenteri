@@ -6,7 +6,7 @@ export const emptyEvent: Event = {
   allowOnlineEntry: true,
   allowOnlinePayment: true,
   allowOwnerMembershipPriority: true,
-  classes: ['test'],
+  classes: [{ class: 'test' }],
   cost: 123,
   costMember: 123,
   createdAt: new Date('1989-01-01'),
@@ -33,5 +33,6 @@ export const emptyEvent: Event = {
   referenceNumber: 'test',
   requirePaymentBeforeEntry: true,
   startDate: new Date('1990-01-01'),
+  state: 'confirmed',
   unofficial: true,
 }
