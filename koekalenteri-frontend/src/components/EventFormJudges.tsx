@@ -1,19 +1,33 @@
 import { AddOutlined, Remove } from '@mui/icons-material';
-import { Button, Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputLabel, MenuItem, Select } from '@mui/material';
-import { format } from 'date-fns';
+import { Button, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
+import { isSameDay } from 'date-fns';
 import { Event, EventClass, Judge } from 'koekalenteri-shared/model';
 import { useTranslation } from 'react-i18next';
-import { CollapsibleSection } from './CollapsibleSection';
+import { CollapsibleSection, EventClasses } from '.';
 
 function filterJudges(judges: Judge[], eventJudges: number[], id: number) {
   return judges.filter(j => j.id === id || !eventJudges.includes(j.id));
 }
 
-export type PartialEventWithJudgesAndClasses = Partial<Event> & { judges: Array<number>, classes: Array<EventClass> };
+export type PartialEventWithJudgesAndClasses = Partial<Event> & { startDate: Date, judges: Array<number>, classes: Array<EventClass> };
 
 export function EventFormJudges({ event, judges, onChange }: { event: PartialEventWithJudgesAndClasses, judges: Judge[], onChange: (props: Partial<Event>) => void }) {
   const { t } = useTranslation();
   const list = event.judges.length ? event.judges : [0];
+  const updateJudge = (id: number, values: EventClass[]) => {
+    const judge = { id, name: judges.find(j => j.id === id)?.name || '' };
+    const isSelected = (c: EventClass) => values.find(v => isSameDay(v.date || event.startDate, c.date || event.startDate) && v.class === c.class);
+    const wasSelected = (c: EventClass) => c.judge?.id === id;
+    return event.classes.map(c => ({
+      ...c,
+      judge: isSelected(c)
+        ? judge
+        : wasSelected(c)
+          ? undefined
+          : c.judge
+    }));
+  }
+
   return (
     <CollapsibleSection title={t('judges')}>
       <Grid item container spacing={1}>
@@ -39,32 +53,17 @@ export function EventFormJudges({ event, judges, onChange }: { event: PartialEve
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item>
-                <FormControl component="fieldset">
-                  <FormLabel component="legend">Arvostelee koeluokat</FormLabel>
-                  <FormGroup row>
-                    {event.classes.map((c, i) => {
-                      const classDate = format(c.date || event.startDate || new Date(), t('dateformatS'));
-                      return (
-                        <FormControlLabel
-                          key={c.class + classDate}
-                          value={c.class}
-                          control={<Checkbox
-                            checked={c.judge?.id === id}
-                            disabled={!id || (c.judge && c.judge.id !== id)}
-                            onChange={(e) => {
-                              const classes = [...event.classes];
-                              classes[i].judge = e.target.checked && id ? { id, name: judges.find(j => j.id === id)?.name || '' } : undefined;
-                              return onChange({ classes });
-                            }}
-                            size="small"
-                          />}
-                          label={`${c.class} ${classDate}`}
-                        />
-                      );
-                    })}
-                  </FormGroup>
-                </FormControl>
+              <Grid item sx={{ width: 300 }}>
+                <EventClasses
+                  id={`class${index}`}
+                  event={event}
+                  value={event.classes.filter(c => c.judge && c.judge.id === id)}
+                  classes={[...event.classes]}
+                  label="Arvostelee koeluokat"
+                  onChange={(e, values) => onChange({
+                    classes: updateJudge(id, values)
+                  })}
+                />
               </Grid>
               <Grid item>
                 <Button startIcon={<Remove />} onClick={() => onChange({judges: event.judges.filter(j => j !== id), classes: event.classes.map(c => c.judge?.id === id ? {...c, judge: undefined} : c)})}>Poista tuomari</Button>

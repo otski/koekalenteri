@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import type { EventEx, EventClass } from 'koekalenteri-shared/model';
 import { useTranslation } from 'react-i18next';
 import { entryDateColor } from '../utils';
-import { LinkButton } from './Buttons';
+import { LinkButton } from '.';
 
 const useRowStyles = makeStyles({
   root: {
@@ -61,7 +61,7 @@ export function EventInfo({ event }: { event: EventEx }) {
           ))}
           <TableRow key={event.id + 'official'}>
             <TableCell component="th" scope="row">{t('official')}:</TableCell>
-            <TableCell>{event.official}</TableCell>
+            <TableCell>{event.official?.name || ''}</TableCell>
           </TableRow>
           <TableRow key={event.id + 'payment'}>
             <TableCell component="th" scope="row">{t('paymentDetails')}:</TableCell>
