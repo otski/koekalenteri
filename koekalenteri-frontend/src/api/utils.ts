@@ -1,38 +1,57 @@
 import type { Event, EventEx } from 'koekalenteri-shared/model';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
+import { DEFAULT_EVENT } from './defaultEvent';
 
 // https://stackoverflow.com/a/69756175/10359775
 type PickByType<T, Value> = {
   [P in keyof T as T[P] extends Value ? P : never]: T[P]
 }
-type EventDates = keyof PickByType<Event, Date>;
+type EventDates = keyof PickByType<Event, Date|undefined>;
 
-const EVENT_DATE_PROPS: EventDates[] = ['startDate', 'endDate', 'entryStartDate', 'entryEndDate', 'createdAt', 'modifiedAt'];
+const EVENT_DATE_PROPS: EventDates[] = ['startDate', 'endDate', 'entryStartDate', 'entryEndDate', 'createdAt', 'modifiedAt', 'deletedAt'];
 
-export function rehydrateEvent(event: Event, now = new Date()): EventEx {
+function rehydrateDate(value: string | number | Date | undefined) {
+  if (value instanceof Date) {
+    return value;
+  }
+  if (value) {
+    return new Date(value);
+  }
+}
+
+export function rehydrateEvent(event: Partial<Event>, now = new Date()): EventEx {
 
   for (const prop of EVENT_DATE_PROPS) {
-    event[prop] = event[prop] && new Date(event[prop]);
+    event[prop] = rehydrateDate(event[prop]);
   }
   if (event.deletedAt) {
     event.deletedAt = new Date(event.deletedAt);
   }
 
-  event.classes = event.classes || [];
-  event.judges = event.judges || [];
-
-  for (const cls of event.classes) {
+  for (const cls of event.classes || []) {
     if (typeof cls === 'string') {
       continue;
     }
-    cls.date = new Date(cls.date || event.startDate);
+    cls.date = rehydrateDate(cls.date || event.startDate);
   }
 
-  const isEntryOpen = startOfDay(event.entryStartDate) <= now && endOfDay(event.entryEndDate) >= now;
+  let isEntryOpen = false;
+  let isEntryClosing = false;
+  let isEntryUpcoming = false;
+
+  if (event.entryStartDate && event.entryEndDate) {
+    isEntryOpen = event.state === 'confirmed' &&
+      startOfDay(event.entryStartDate) <= now &&
+      endOfDay(event.entryEndDate) >= now;
+    isEntryClosing = isEntryOpen && subDays(event.entryEndDate, 7) <= endOfDay(now);
+    isEntryUpcoming = event.entryStartDate > now;
+  }
+
   return {
+    ...DEFAULT_EVENT,
     ...event,
     isEntryOpen,
-    isEntryClosing: isEntryOpen && subDays(event.entryEndDate, 7) <= endOfDay(now),
-    isEntryUpcoming: event.entryStartDate > now
+    isEntryClosing,
+    isEntryUpcoming
   };
 }

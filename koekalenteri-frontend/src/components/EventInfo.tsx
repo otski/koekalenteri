@@ -121,7 +121,7 @@ function EventClassTable({ event }: EventProps) {
 
 function EventClassTableRow({ event, eventClass }: { event: EventEx, eventClass: EventClass }) {
   const { t } = useTranslation();
-  const classDate = format(eventClass.date || event.startDate, t('dateformatS'));
+  const classDate = format(eventClass.date || event.startDate || new Date(), t('dateformatS'));
   const entryStatus = eventClass.places ? `${eventClass.entries || 0}/${eventClass.places}` : '';
   const memberStatus = eventClass.members ? `(${eventClass.members} jäsentä)` : '';
   return (
