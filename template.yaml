@@ -410,7 +410,7 @@ Resources:
               - ssm:GetParameter
               Resource: '*'
         - CloudWatchPutMetricPolicy: {}
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref DogTable
       Environment:
         Variables:
