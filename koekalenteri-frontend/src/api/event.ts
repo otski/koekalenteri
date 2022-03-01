@@ -4,8 +4,8 @@ import { rehydrateEvent } from './utils';
 
 const PATH = '/event/';
 
-export async function getEvents(): Promise<EventEx[]> {
-  const jsonedEvents = await http.get<Array<Event>>(PATH);
+export async function getEvents(signal?: AbortSignal): Promise<EventEx[]> {
+  const jsonedEvents = await http.get<Array<Event>>(PATH, {signal});
   return jsonedEvents.map(event => rehydrateEvent(event));
 }
 
@@ -14,6 +14,6 @@ export async function getEvent(eventType: string, id: string, signal?: AbortSign
   return rehydrateEvent(jsonedEvent);
 }
 
-export async function saveEvent(event: Partial<Event>): Promise<EventEx> {
+export async function putEvent(event: Partial<Event>): Promise<EventEx> {
   return rehydrateEvent(await http.post<Partial<Event>, EventEx>(PATH, event));
 }

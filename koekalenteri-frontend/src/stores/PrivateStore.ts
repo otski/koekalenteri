@@ -8,10 +8,10 @@ export class PrivateStore {
   public loading: boolean = false;
 
   public newEvent: Partial<Event> = {eventType: ''};
-  public selectedEvent: Event | undefined = undefined;
+  public selectedEvent: Partial<Event> | undefined = undefined;
 
   public officials: Official[] = [];
-  public events: EventEx[] = [];
+  public events: Partial<EventEx>[] = [];
 
   constructor() {
     makeAutoObservable(this)
@@ -26,14 +26,14 @@ export class PrivateStore {
     this.newEvent = event;
   }
 
-  setSelectedEvent(event: EventEx|undefined) {
+  setSelectedEvent(event: Partial<EventEx>|undefined) {
     this.selectedEvent = event;
   }
 
-  async load() {
+  async load(signal?: AbortSignal) {
     this.setLoading(true);
-    const events = await eventApi.getEvents();
-    const officials = await officialApi.getOfficials();
+    const events = await eventApi.getEvents(signal);
+    const officials = await officialApi.getOfficials(signal);
     runInAction(() => {
       this.events = events;
       this.officials = officials;
@@ -41,9 +41,16 @@ export class PrivateStore {
     this.setLoading(false);
   }
 
-  async saveEvent(event: Partial<Event>) {
+  async get(id: string, signal?: AbortSignal): Promise<Partial<Event>|undefined> {
+    if (!this.loaded) {
+      await this.load(signal);
+    }
+    return this.events.find(e => e.id === id);
+  }
+
+  async putEvent(event: Partial<Event>) {
     const newEvent = !event.id;
-    const saved = await eventApi.saveEvent(event);
+    const saved = await eventApi.putEvent(event);
     if (newEvent) {
       this.events.push(saved);
       this.newEvent = {eventType: ''};
@@ -57,12 +64,12 @@ export class PrivateStore {
     return saved;
   }
 
-  async deleteEvent(event: Event) {
+  async deleteEvent(event: Partial<Event>) {
     const index = this.events.findIndex(e => e.id === event.id);
     if (index > -1) {
       event.deletedAt = new Date();
       event.deletedBy = 'user';
-      const saved = await this.saveEvent(event);
+      const saved = await this.putEvent(event);
       this.events.splice(index, 1);
       return saved;
     }
