@@ -51,13 +51,13 @@ Parameters:
 
 Resources:
 
-#cognito declaration
+  #cognito declaration
   KoekalenteriUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
-      UserPoolName: KoekalenteriUsers
+      UserPoolName: !Sub 'KoekalenteriUsers-${AWS::StackName}'
       UsernameAttributes:
       - email
       AutoVerifiedAttributes:
@@ -70,6 +70,31 @@ Resources:
           RequireSymbols: false
           RequireUppercase: true
 
+  KoekalenteriUserPoolDomain:
+    Type: 'AWS::Cognito::UserPoolDomain'
+    Properties:
+      # using client id will make the domain unique
+      Domain: !Sub dns-name-${KoekalenteriUserPoolClient}
+      UserPoolId: !Ref KoekalenteriUserPool
+    DependsOn:
+      - KoekalenteriUserPoolTokenClient
+
+  KoekalenteriKoesihteeriUserGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: 'koesihteeri'
+      UserPoolId: !Ref KoekalenteriUserPool
+    DependsOn: 
+      - KoekalenteriUserPool
+
+  KoekalenteriAdminUserGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: 'admin'
+      UserPoolId: !Ref KoekalenteriUserPool
+    DependsOn: 
+      - KoekalenteriUserPool
+
   KoekalenteriUserPoolTokenClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -81,12 +106,14 @@ Resources:
       SupportedIdentityProviders: ['COGNITO']
       AllowedOAuthScopes: ['email', 'openid']
       ExplicitAuthFlows:
-      - USER_PASSWORD_AUTH
+        - USER_PASSWORD_AUTH
+    DependsOn: 
+      - KoekalenteriUserPool
 
   KoekalenteriDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: !Join ['-', [!Ref CognitoDomainName, !Ref AWS::StackName]]
+      Domain: !Sub '${CognitoDomainName}-${AWS::StackName}'
       UserPoolId: !Ref KoekalenteriUserPool
 
   EventTable:
@@ -255,7 +282,7 @@ Resources:
       Auth:
         Authorizers:
           CognitoAuthorizer:
-            UserPoolArn: !GetAtt "KoekalenteriUserPool.Arn"
+            UserPoolArn: !Ref KoekalenteriUserPool
 
   # API Functions
   GetEventsFunction:
@@ -334,8 +361,8 @@ Resources:
             Path: /event
             Method: POST
             RestApiId: !Ref KoekalenteriApi
-            #Auth:
-            #  Authorizer: CognitoAuthorizer
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   GetJudgesFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -504,8 +531,7 @@ Resources:
             Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
-
-
+  
   ApiAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
