@@ -3,8 +3,8 @@ import { Autocomplete, AutocompleteChangeReason, Avatar, Checkbox, Chip, TextFie
 import { isSameDay } from "date-fns";
 import { EventClass, EventState } from "koekalenteri-shared/model";
 import { useTranslation } from "react-i18next";
-import { PartialEvent } from ".";
-import { validateEventField } from "./EventForm.validation";
+import { PartialEvent } from "../..";
+import { validateEventField } from "./validation";
 
 
 /**
@@ -43,10 +43,9 @@ export function EventClasses(props: EventClassesProps) {
   }
 
   const { t } = useTranslation();
-  const { t: te } = useTranslation('event');
   const { classes, label, event, required, requiredState, ...rest } = props;
-  const error = required && validateEventField(event, 'classes');
-  const helperText = error ? te(error.key, { ...error.opts, state: requiredState }) : '';
+  const error = required && validateEventField(event, 'classes', true);
+  const helperText = error ? 'error' : '';
 
   return (
     <Autocomplete
@@ -60,8 +59,8 @@ export function EventClasses(props: EventClassesProps) {
       options={classes}
       getOptionLabel={c => c.class}
       isOptionEqualToValue={(o, v) => compareEventClass(o, v) === 0}
-      renderOption={(props, option, { selected }) => (
-        <li {...props}>
+      renderOption={(optionProps, option, { selected }) => (
+        <li {...optionProps}>
           <Checkbox
             icon={<CheckBoxOutlineBlank fontSize="small" />}
             checkedIcon={<CheckBox fontSize="small" />}
@@ -71,7 +70,7 @@ export function EventClasses(props: EventClassesProps) {
           {option.class}
         </li>
       )}
-      renderInput={(params) => <TextField {...params} required={required} error={!!error} helperText={helperText} label={label} />}
+      renderInput={(inputProps) => <TextField {...inputProps} required={required} error={!!error} helperText={helperText} label={label} />}
       renderTags={(tagValue, getTagProps) => tagValue.map((option, index) => (
         <Chip
           {...getTagProps({ index })}

@@ -104,9 +104,32 @@ Resources:
           - AttributeName: id
             AttributeType: S
       Tags:
-        - Key: "env"
+        - Key: Env
           Value: !Ref AWS::StackName
-        - Key: "label"
+        - Key: Label
+          Value: "koekalenteri"
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: false
+
+  EventRegistrationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join ['-', [event-registration-table, !Ref AWS::StackName]]
+      KeySchema:
+          - AttributeName: eventId
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
+      AttributeDefinitions:
+          - AttributeName: eventId
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+      Tags:
+        - Key: Env
+          Value: !Ref AWS::StackName
+        - Key: Label
           Value: "koekalenteri"
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
@@ -115,7 +138,7 @@ Resources:
   UserTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Join ['-', ['user-table', !Ref AWS::StackName]]
+      TableName: !Join ['-', [user-table, !Ref AWS::StackName]]
       KeySchema:
           - AttributeName: id
             KeyType: HASH
@@ -127,9 +150,9 @@ Resources:
           - AttributeName: cognito-username
             AttributeType: S
       Tags:
-        - Key: "env"
+        - Key: Env
           Value: !Ref AWS::StackName
-        - Key: "label"
+        - Key: Label
           Value: "koekalenteri"
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
@@ -146,9 +169,9 @@ Resources:
           - AttributeName: id
             AttributeType: N
       Tags:
-        - Key: "env"
+        - Key: Env
           Value: !Ref AWS::StackName
-        - Key: "label"
+        - Key: Label
           Value: "koekalenteri"
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
@@ -165,9 +188,9 @@ Resources:
           - AttributeName: id
             AttributeType: N
       Tags:
-        - Key: "env"
+        - Key: Env
           Value: !Ref AWS::StackName
-        - Key: "label"
+        - Key: Label
           Value: "koekalenteri"
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
@@ -184,9 +207,9 @@ Resources:
           - AttributeName: id
             AttributeType: N
       Tags:
-        - Key: "env"
+        - Key: Env
           Value: !Ref AWS::StackName
-        - Key: "label"
+        - Key: Label
           Value: "koekalenteri"
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
@@ -203,9 +226,9 @@ Resources:
           - AttributeName: regNo
             AttributeType: S
       Tags:
-        - Key: "env"
+        - Key: Env
           Value: !Ref AWS::StackName
-        - Key: "label"
+        - Key: Label
           Value: "koekalenteri"
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
@@ -222,9 +245,9 @@ Resources:
           - AttributeName: code
             AttributeType: S
       Tags:
-        - Key: "env"
+        - Key: Env
           Value: !Ref AWS::StackName
-        - Key: "label"
+        - Key: Label
           Value: "koekalenteri"
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
@@ -336,6 +359,41 @@ Resources:
             RestApiId: !Ref KoekalenteriApi
             #Auth:
             #  Authorizer: CognitoAuthorizer
+
+  PutRegistrationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: koekalenteri-backend
+      Handler: dist/handlers/event.putRegistrationHandler
+      Layers:
+        - !Ref CommonLayer
+      Tracing: Active
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EventRegistrationTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EventTable
+        - CloudWatchPutMetricPolicy: {}
+        - Statement:
+            - Sid: SESSendEmailPolicy
+              Effect: Allow
+              Action:
+              - ses:sendTemplatedEmail
+              Resource: '*'
+
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref EventRegistrationTable
+          EVENT_TABLE_NAME : !Ref EventTable
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+
+      Events:
+        PutEvent:
+          Type: Api
+          Properties:
+            Path: /event/register
+            Method: POST
+            RestApiId: !Ref KoekalenteriApi
 
   GetJudgesFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
