@@ -16,13 +16,14 @@ import { filterRelevantResults, validateRegistration } from './validation';
 type FormEventHandler = (registration: Registration) => Promise<boolean>;
 type RegistrationFormProps = {
   event: ConfirmedEventEx
+  registration?: Registration
   className?: string
   classDate?: string
   onSave?: FormEventHandler
   onCancel?: FormEventHandler
 };
 
-export function RegistrationForm({ event, className, classDate, onSave, onCancel }: RegistrationFormProps) {
+export function RegistrationForm({ event, className, registration, classDate, onSave, onCancel }: RegistrationFormProps) {
   const { t, i18n } = useTranslation();
   const [local, setLocal] = useState<Registration>({
     eventId: event.id,
@@ -63,7 +64,8 @@ export function RegistrationForm({ event, className, classDate, onSave, onCancel
     createdAt: new Date(),
     createdBy: '',
     modifiedAt: new Date(),
-    modifiedBy: ''
+    modifiedBy: '',
+    ...registration
   });
   const [qualifies, setQualifies] = useState<boolean|null>(null);
   const [saving, setSaving] = useState(false);
@@ -114,7 +116,7 @@ export function RegistrationForm({ event, className, classDate, onSave, onCancel
   }
 
   return (
-    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto' }}>
+    <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto', height: '100%' }}>
       <Box sx={{ pb: 0.5, overflow: 'auto', borderRadius: 1, bgcolor: 'background.form', '& .MuiInputBase-root': { bgcolor: 'background.default'} }}>
         <EntryInfo reg={local} event={event} classDate={classDate} errorStates={errorStates} helperTexts={helperTexts} onChange={onChange} />
         <DogInfo reg={local} eventDate={event.startDate} minDogAgeMonths={9} error={errorStates.dog} helperText={helperTexts.dog} onChange={onChange} />
