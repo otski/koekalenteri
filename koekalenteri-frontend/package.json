@@ -12,6 +12,7 @@
     "@mui/material": "^5.0.0",
     "@mui/styles": "^5.0.0",
     "@mui/x-data-grid": "^5.2.1",
+    "aws-amplify": "^4.3.17",
     "date-fns": "^2.23.0",
     "history": "^5.0.1",
     "i18next": "^21.4.0",
