@@ -4,16 +4,14 @@ import { AWSError } from "aws-sdk";
 import { metricsError, metricsSuccess } from "../utils/metrics";
 import { response } from "../utils/response";
 import KLAPI from "../utils/KLAPI";
+import { KLKieli } from "../utils/KLAPI_models";
 
 const klapi = new KLAPI();
 
 export const getEventTypesHandler = metricScope((metrics: MetricsLogger) =>
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
-      // const refresh = event.queryStringParameters && 'refresh' in event.queryStringParameters;
-
-      const { status, json } = await klapi.lueKoemuodot();
-
+      const { status, json } = await klapi.lueKoemuodot({Kieli: KLKieli.Suomi});
       metricsSuccess(metrics, event.requestContext, 'getEventTypesHandler');
       return response(status, json);
     } catch (err) {
