@@ -2,7 +2,7 @@
 
 # Ilmoittautumisesi on otettu vastaan
 
-Alla näet ilmoituksesi tiedot sekä linkin, jonka avulla voit tarvittaessa tehdä muutoksia ilmoittautumiseen tai perua ilmoittautumisesi.
+Alla näet ilmoittautumisesi tiedot sekä linkin, jonka avulla voit tarvittaessa tehdä muutoksia tai perua ilmoittautumisesi.
 
 table header | is removed
 :-- | ----
