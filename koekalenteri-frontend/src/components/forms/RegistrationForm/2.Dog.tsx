@@ -1,6 +1,6 @@
-import { RefreshOutlined } from '@mui/icons-material';
-import { DatePicker } from '@mui/lab';
-import { Autocomplete, FormControl, Grid, IconButton, InputAdornment, TextField } from '@mui/material';
+import { CachedOutlined } from '@mui/icons-material';
+import { DatePicker, LoadingButton } from '@mui/lab';
+import { Autocomplete, FormControl, FormHelperText, Grid, Stack, TextField } from '@mui/material';
 import { differenceInMinutes, subMonths, subYears } from 'date-fns';
 import { BreedCode, Dog, DogGender, Registration } from 'koekalenteri-shared/model';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import { AutocompleteSingle, CollapsibleSection } from '../..';
 import { getDog } from '../../../api/dog';
 import { useLocalStorage } from '../../../stores';
 import { unique } from '../../../utils';
+import { validateRegNo } from './validation';
 
 export function shouldAllowRefresh(dog?: Partial<Dog>) {
   if (!dog || !dog.regNo) {
@@ -17,7 +18,7 @@ export function shouldAllowRefresh(dog?: Partial<Dog>) {
   if (dog.refreshDate && differenceInMinutes(new Date(), dog.refreshDate) <= 5) {
     return false;
   }
-  return true;
+  return !!dog.refreshDate;
 }
 
 type DogInfoProps = {
@@ -31,68 +32,113 @@ type DogInfoProps = {
 
 export function DogInfo({ reg, eventDate, minDogAgeMonths, error, helperText, onChange }: DogInfoProps ) {
   const { t } = useTranslation();
+  const { t: breed } = useTranslation('breed');
   const [loading, setLoading] = useState(false);
   const [dogs, setDogs] = useLocalStorage('dogs', '');
-  const [regNo, setRegNo] = useState<string>('');
-  const [disabled, setDisabled] = useState(false);
+  const [regNo, setRegNo] = useState<string>(reg.dog.regNo);
+  const [mode, setMode] = useState<'fetch' | 'manual' | 'update' | 'invalid' | 'notfound'>('fetch');
   const allowRefresh = shouldAllowRefresh(reg.dog);
-  const loadDog = async (value?: string, refresh?: boolean) => {
-    if (!value) {
-      value = regNo;
+  const disabled = mode !== 'manual';
+  const validRegNo = validateRegNo(regNo);
+  const loadDog = async (value: string, refresh?: boolean) => {
+    setRegNo(value);
+    if (!value || !validateRegNo(value)) {
+      return;
     }
-    value = value.toUpperCase();
-    if (value !== '' && (reg.dog.regNo !== value || refresh)) {
-      setLoading(true);
-      const lookup = await getDog(value, refresh);
-      setLoading(false);
-      const storedDogs = dogs?.split(',') || [];
-      if (lookup && lookup.regNo) {
-        storedDogs.push(lookup.regNo);
-        setDogs(unique(storedDogs).filter(v => v !== '').join(','));
-        setDisabled(true);
-        setRegNo(lookup.regNo);
-        onChange({ dog: { ...reg.dog, ...lookup } });
-      } else {
-        setDisabled(false);
-        if (storedDogs.includes(value)) {
-          setDogs(storedDogs.filter(v => v !== value).join(','));
-        }
-        onChange({ dog: { ...reg.dog, regNo: value } });
+    setLoading(true);
+    const lookup = await getDog(value, refresh);
+    const storedDogs = dogs?.split(',') || [];
+    setLoading(false);
+    if (lookup && lookup.regNo) {
+      storedDogs.push(lookup.regNo);
+      setDogs(unique(storedDogs).join(','));
+      setRegNo(lookup.regNo);
+      onChange({ dog: { ...reg.dog, ...lookup } });
+      setMode('update');
+    } else {
+      if (storedDogs.includes(value)) {
+        setDogs(storedDogs.filter(v => v !== value).join(','));
       }
+      setMode('notfound');
+      onChange({ dog: { regNo: value, name: '', dob: new Date(), results: [] } });
     }
   };
+  const buttonClick = () => {
+    switch (mode) {
+      case 'fetch':
+        loadDog(regNo);
+        break;
+      case 'update':
+        loadDog(regNo, true);
+        break;
+      case 'notfound':
+        setMode('manual');
+        break;
+      default:
+        setMode('fetch');
+        break;
+    }
+  }
+
   return (
-    <CollapsibleSection title={t('registration.dog')} loading={loading} error={error} helperText={helperText}>
-      <Grid container spacing={1}>
-        <Grid item sx={{ minWidth: 220 }}>
-          <Autocomplete
-            id="txtReknro"
-            freeSolo
-            renderInput={(props) => <TextField {...props}
-              error={!reg.dog.regNo}
-              label={t('dog.regNo')}
-              InputProps={{
-                ...props.InputProps,
-                endAdornment: <>{allowRefresh ? <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => loadDog(undefined, true)}><RefreshOutlined fontSize="small" /></IconButton>
-                </InputAdornment> : ''}{props.InputProps.endAdornment}</>
-              }} />}
-            value={reg.dog.regNo}
-            onChange={(e, value) => { setRegNo(value || ''); loadDog(value || ''); }}
-            onInputChange={(e, value) => setRegNo(value)}
-            options={dogs?.split(',') || []}
-            onBlur={() => loadDog()} />
-        </Grid>
+    <CollapsibleSection title={t('registration.dog')} error={error} helperText={helperText}>
+      <Stack direction="row" spacing={1} alignItems="flex-end">
+        <Autocomplete
+          id="txtReknro"
+          disabled={!disabled}
+          freeSolo
+          renderInput={(props) => <TextField {...props} error={!reg.dog.regNo} label={t('dog.regNo')}/>}
+          value={regNo}
+          onChange={(_e, value) => loadDog(value?.toUpperCase() || '')}
+          onInputChange={(e, value) => {
+            value = value.toUpperCase();
+            if (regNo === value) {
+              return;
+            }
+            if (e?.nativeEvent instanceof InputEvent && e.nativeEvent.inputType === 'insertFromPaste') {
+              loadDog(value);
+            } else {
+              setRegNo(value);
+              onChange({ dog: { regNo: value, name: '', dob: new Date(), results: [] } });
+              setMode(validateRegNo(value) ? 'fetch' : 'invalid');
+            }
+          }}
+          options={dogs?.split(',') || []}
+          sx={{minWidth: 200}}
+        />
+        <Stack alignItems="flex-start">
+          <FormHelperText error={mode === 'notfound' || mode === 'invalid'}>{t(`registration.cta.helper.${mode}`, {date: reg.dog.refreshDate})}</FormHelperText>
+          <LoadingButton
+            disabled={!validRegNo || (mode === 'update' && !allowRefresh)}
+            startIcon={<CachedOutlined />}
+            size="small"
+            loading={loading}
+            variant="outlined"
+            color="info"
+            onClick={buttonClick}
+          >
+            {t(`registration.cta.${mode}`)}
+          </LoadingButton>
+        </Stack>
+      </Stack>
+      <Grid container spacing={1} sx={{mt: 0.5}}>
         <Grid item>
-          <TextField disabled={disabled} fullWidth label={t('dog.rfid')} value={reg.dog.rfid || ''} error={!reg.dog.rfid} onChange={(e) => onChange({ dog: { ...reg.dog, rfid: e.target.value } })} />
+          <TextField
+            disabled={disabled}
+            fullWidth
+            label={t('dog.rfid')}
+            value={reg.dog.rfid || ''}
+            error={!disabled && !reg.dog.rfid}
+            onChange={(e) => onChange({ dog: { ...reg.dog, rfid: e.target.value } })}
+          />
         </Grid>
         <Grid item sx={{ width: 300 }}>
           <AutocompleteSingle
             disableClearable
             disabled={disabled}
-            getOptionLabel={(o) => t(`breed.${o}`)}
+            getOptionLabel={(o) => breed(o)}
             label={t('dog.breed')}
-            onChange={(e, value) => onChange({ dog: { ...reg.dog, breedCode: value || undefined } })}
+            onChange={(_e, value) => onChange({ dog: { ...reg.dog, breedCode: value || undefined } })}
             options={['122', '111', '121', '312', '110', '263'] as BreedCode[]}
             value={reg.dog.breedCode || '122'}
           />
@@ -120,36 +166,82 @@ export function DogInfo({ reg, eventDate, minDogAgeMonths, error, helperText, on
             disabled={disabled}
             value={reg.dog.gender || 'F'}
             label={t('dog.gender')}
-            onChange={(e, value) => onChange({ dog: { ...reg.dog, gender: value } })}
+            onChange={(_e, value) => onChange({ dog: { ...reg.dog, gender: value } })}
             options={['F', 'M'] as DogGender[]}
             getOptionLabel={o => t(`dog.gender_choises.${o}`)}
           />
         </Grid>
         <Grid item container spacing={1}>
-          <Grid item>
-            <TextField disabled={disabled} sx={{ width: 300 }} label={t('dog.titles')} value={reg.dog.titles || ''} onChange={(e) => onChange({ dog: { ...reg.dog, titles: e.target.value } })}/>
-          </Grid>
-          <Grid item>
-            <TextField disabled={disabled} sx={{ width: 300 }} label={t('dog.name')} value={reg.dog.name || ''} error={!reg.dog.name} onChange={(e) => onChange({ dog: { ...reg.dog, name: e.target.value } })} />
-          </Grid>
+          <TitlesAndName
+            disabled={disabled}
+            id="dog"
+            name={reg.dog.name}
+            nameLabel={t('dog.name')}
+            onChange={props => onChange({ dog: { ...reg.dog, ...props } })}
+            titles={reg.dog.titles}
+            titlesLabel={t('dog.titles')}
+          />
         </Grid>
         <Grid item container spacing={1}>
-          <Grid item>
-            <TextField id="sire_titles" sx={{ width: 300 }} label={t('dog.sire.titles')} value={reg.dog.sire?.titles || ''} onChange={(e) => onChange({ dog: { ...reg.dog, sire: { ...reg.dog.sire, titles: e.target.value } } })} />
-          </Grid>
-          <Grid item>
-            <TextField id="sire_name" sx={{ width: 300 }} label={t('dog.sire.name')} error={!reg.dog.sire?.name} value={reg.dog.sire?.name || ''} onChange={(e) => onChange({ dog: { ...reg.dog, sire: { ...reg.dog.sire, name: e.target.value } } }) } />
-          </Grid>
+          <TitlesAndName
+            disabled={disabled}
+            id="sire"
+            name={reg.dog.sire?.name}
+            nameLabel={t('dog.sire.name')}
+            onChange={props => onChange({ dog: { ...reg.dog, sire: { ...reg.dog.sire, ...props } } })}
+            titles={reg.dog.sire?.titles}
+            titlesLabel={t('dog.sire.titles')}
+          />
         </Grid>
         <Grid item container spacing={1}>
-          <Grid item>
-            <TextField id="dam_titles" sx={{ width: 300 }} label={t('dog.dam.titles')} value={reg.dog.dam?.titles || ''} onChange={(e) => onChange({ dog: { ...reg.dog, dam: { ...reg.dog.dam, titles: e.target.value } } })} />
-          </Grid>
-          <Grid item>
-            <TextField id="dam_name" sx={{ width: 300 }} label={t('dog.dam.name')} value={reg.dog.dam?.name || ''} error={!reg.dog.dam?.name} onChange={(e) => onChange({ dog: { ...reg.dog, dam: { ...reg.dog.dam, name: e.target.value } } }) } />
-          </Grid>
+          <TitlesAndName
+            disabled={disabled}
+            id="dam"
+            name={reg.dog.dam?.name}
+            nameLabel={t('dog.dam.name')}
+            onChange={props => onChange({ dog: { ...reg.dog, dam: { ...reg.dog.dam, ...props } } })}
+            titles={reg.dog.dam?.titles}
+            titlesLabel={t('dog.dam.titles')}
+          />
         </Grid>
       </Grid>
     </CollapsibleSection>
+  );
+}
+
+type TitlesAndNameProps = {
+  disabled: boolean
+  id: string
+  name?: string
+  nameLabel: string
+  onChange: (props: {titles?: string, name?: string}) => void
+  titles?: string
+  titlesLabel: string
+}
+function TitlesAndName(props: TitlesAndNameProps) {
+  return (
+    <Grid item container spacing={1}>
+      <Grid item>
+        <TextField
+          disabled={props.disabled}
+          id={`${props.id}_titles`}
+          label={props.titlesLabel}
+          onChange={(e) => props.onChange({ titles: e.target.value })}
+          sx={{ width: 300 }}
+          value={props.titles || ''}
+        />
+      </Grid>
+      <Grid item>
+        <TextField
+          disabled={props.disabled}
+          error={!props.disabled && !props.name}
+          id={`${props.id}_name`}
+          label={props.nameLabel}
+          onChange={(e) => props.onChange({ name: e.target.value })}
+          sx={{ width: 300 }}
+          value={props.name || ''}
+        />
+      </Grid>
+    </Grid>
   );
 }

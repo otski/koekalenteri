@@ -33,7 +33,7 @@ export function JudgesSection({ event, judges, fields, onChange }: { event: Part
     <CollapsibleSection title={t('judges')}>
       <Grid item container spacing={1}>
         {list.map((id, index) => {
-          const title = index === 0 ? t('judge_chief') : t('judge') + ` ${index + 1}`;
+          const title = index === 0 ? t('judgeChief') : t('judge') + ` ${index + 1}`;
           return (
             <Grid key={id} item container spacing={1} alignItems="center">
               <Grid item sx={{ width: 300 }}>
@@ -42,7 +42,7 @@ export function JudgesSection({ event, judges, fields, onChange }: { event: Part
                   label={title}
                   getOptionLabel={o => o?.name || ''}
                   options={filterJudges(judges, event.judges, id)}
-                  onChange={(e, value) => {
+                  onChange={(_e, value) => {
                     const newId = value?.id;
                     const newJudges = [...event.judges];
                     const oldId = newJudges.splice(index, 1)[0]
@@ -63,7 +63,7 @@ export function JudgesSection({ event, judges, fields, onChange }: { event: Part
                   value={event.classes.filter(c => c.judge && c.judge.id === id)}
                   classes={[...event.classes]}
                   label="Arvostelee koeluokat"
-                  onChange={(e, values) => onChange({
+                  onChange={(_e, values) => onChange({
                     classes: updateJudge(id, values)
                   })}
                 />
