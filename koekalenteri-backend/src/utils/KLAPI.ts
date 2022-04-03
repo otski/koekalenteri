@@ -131,26 +131,26 @@ export default class KLAPI {
   }
 
   async lueKennelpiirit(): KLAPIResult<Array<KLKennelpiiri>> {
-    return this.get('Yleistä/Lue/Kennelpiirit');
+    return this.get('Yleista/Lue/Kennelpiirit');
   }
 
   async luePaikkakunnat(parametrit: { KennelpiirinNumero?: number }): KLAPIResult<Array<KLPaikkakunta>> {
-    return this.get('Yleistä/Lue/Paikkakunnat', parametrit);
+    return this.get('Yleista/Lue/Paikkakunnat', parametrit);
   }
 
   async lueYhdistykset(parametrit: KLYhdistysParametrit): KLAPIResult<Array<KLYhdistys>> {
-    return this.get('Yleistä/Lue/Yhdistykset', parametrit);
+    return this.get('Yleista/Lue/Yhdistykset', parametrit);
   }
 
   async lueParametrit(parametrit: KLParametritParametrit): KLAPIResult<Array<KLArvo>> {
-    return this.get('Yleistä/Lue/Parametrit', parametrit);
+    return this.get('Yleista/Lue/Parametrit', parametrit);
   }
 
   async lueRoturyhmät(parametrit: KLRoturyhmätParametrit): KLAPIResult<Array<KLRoturyhmä>> {
-    return this.get('Yleistä/Lue/Roturyhmät', parametrit);
+    return this.get('Yleista/Lue/Roturyhmat', parametrit);
   }
 
   async lueRodut(parametrit: KLRodutParametrit): KLAPIResult<Array<KLRotu>> {
-    return this.get('Yleistä/Lue/Rodut', parametrit);
+    return this.get('Yleista/Lue/Rodut', parametrit);
   }
 }
