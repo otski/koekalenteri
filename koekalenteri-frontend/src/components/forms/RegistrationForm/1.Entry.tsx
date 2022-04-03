@@ -34,7 +34,7 @@ type EntryInfoProps = {
 
 export function EntryInfo({ reg, event, classDate, errorStates, helperTexts, onChange }: EntryInfoProps) {
   const { t } = useTranslation();
-  const classDates = getRegistrationDates(event, classDate, reg.class);
+  const classDates = getRegistrationDates(event, classDate, reg.class || '');
   const error = errorStates.class || errorStates.dates || errorStates.reserve;
   const datesText = reg.dates.map(o => t('weekday', { date: o.date }) + (o.time === 'ap' ? ' (aamu)' : ' (ilta)')).join(' / ');
   const reserveText = reg.reserve ? t(`registration.reserveChoises.${reg.reserve}`) : '';

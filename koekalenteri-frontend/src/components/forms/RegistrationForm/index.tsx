@@ -76,7 +76,7 @@ export function RegistrationForm({ event, className, registration, classDate, on
     console.log('Changes: ' + JSON.stringify(props));
     if (props.class) {
       if (!props.dates) {
-        const allCount = getRegistrationDates(event, classDate, local.class).length;
+        const allCount = getRegistrationDates(event, classDate, local.class || '').length;
         const available = getRegistrationDates(event, classDate, props.class);
         if (local.dates.length === allCount) {
           local.dates = available;
