@@ -1,6 +1,6 @@
 import { CachedOutlined } from '@mui/icons-material';
 import { DatePicker, LoadingButton } from '@mui/lab';
-import { Autocomplete, FormControl, FormHelperText, Grid, Stack, TextField } from '@mui/material';
+import { Autocomplete, FormHelperText, Grid, Stack, TextField } from '@mui/material';
 import { differenceInMinutes, subMonths, subYears } from 'date-fns';
 import { BreedCode, Dog, DogGender, Registration } from 'koekalenteri-shared/model';
 import { useState } from 'react';
@@ -30,7 +30,7 @@ type DogInfoProps = {
   onChange: (props: Partial<Registration>) => void
 };
 
-export function DogInfo({ reg, eventDate, minDogAgeMonths, error, helperText, onChange }: DogInfoProps ) {
+export function DogInfo({ reg, eventDate, minDogAgeMonths, error, helperText, onChange }: DogInfoProps) {
   const { t } = useTranslation();
   const { t: breed } = useTranslation('breed');
   const [loading, setLoading] = useState(false);
@@ -87,7 +87,7 @@ export function DogInfo({ reg, eventDate, minDogAgeMonths, error, helperText, on
           id="txtReknro"
           disabled={!disabled}
           freeSolo
-          renderInput={(props) => <TextField {...props} error={!reg.dog.regNo} label={t('dog.regNo')}/>}
+          renderInput={(props) => <TextField {...props} error={!reg.dog.regNo} label={t('dog.regNo')} />}
           value={regNo}
           onChange={(_e, value) => loadDog(value?.toUpperCase() || '')}
           onInputChange={(e, value) => {
@@ -104,10 +104,10 @@ export function DogInfo({ reg, eventDate, minDogAgeMonths, error, helperText, on
             }
           }}
           options={dogs?.split(',') || []}
-          sx={{minWidth: 200}}
+          sx={{ minWidth: 200 }}
         />
         <Stack alignItems="flex-start">
-          <FormHelperText error={mode === 'notfound' || mode === 'invalid'}>{t(`registration.cta.helper.${mode}`, {date: reg.dog.refreshDate})}</FormHelperText>
+          <FormHelperText error={mode === 'notfound' || mode === 'invalid'}>{t(`registration.cta.helper.${mode}`, { date: reg.dog.refreshDate })}</FormHelperText>
           <LoadingButton
             disabled={!validRegNo || (mode === 'update' && !allowRefresh)}
             startIcon={<CachedOutlined />}
@@ -121,7 +121,7 @@ export function DogInfo({ reg, eventDate, minDogAgeMonths, error, helperText, on
           </LoadingButton>
         </Stack>
       </Stack>
-      <Grid container spacing={1} sx={{mt: 0.5}}>
+      <Grid container spacing={1} sx={{ mt: 0.5 }}>
         <Grid item>
           <TextField
             disabled={disabled}
@@ -133,45 +133,43 @@ export function DogInfo({ reg, eventDate, minDogAgeMonths, error, helperText, on
           />
         </Grid>
         <Grid item sx={{ width: 300 }}>
-          <AutocompleteSingle
-            disableClearable
+          <AutocompleteSingle<BreedCode | '', true>
             disabled={disabled}
             error={!disabled && !reg.dog.breedCode}
-            getOptionLabel={(o) => breed(o)}
+            getOptionLabel={(o) => o ? breed(o) : ''}
+            isOptionEqualToValue={(o, v) => o === v}
             label={t('dog.breed')}
-            onChange={(_e, value) => onChange({ dog: { ...reg.dog, breedCode: value || undefined } })}
-            options={['122', '111', '121', '312', '110', '263'] as BreedCode[]}
-            value={reg.dog.breedCode}
+            onChange={(_e, value) => onChange({ dog: { ...reg.dog, breedCode: value ? value : undefined } })}
+            options={['122', '111', '121', '312', '110', '263']}
+            value={reg.dog.breedCode || ''}
           />
         </Grid>
-        <Grid item xs={'auto'}>
-          <FormControl sx={{ width: 146, mr: 0.5 }}>
-            <DatePicker
-              defaultCalendarMonth={subYears(new Date(), 2)}
-              disabled={disabled}
-              inputFormat={t('dateformat')}
-              label={t('dog.dob')}
-              mask={t('datemask')}
-              maxDate={subMonths(eventDate, minDogAgeMonths)}
-              minDate={subYears(new Date(), 15)}
-              onChange={(value) => value && onChange({ dog: { ...reg.dog, dob: value } })}
-              openTo={'year'}
-              renderInput={(params) => <TextField {...params} />}
-              value={reg.dog.dob || null}
-              views={['year', 'month', 'day']}
-            />
-          </FormControl>
+        <Grid item xs={'auto'} sx={{width: 150}}>
+          <DatePicker
+            defaultCalendarMonth={subYears(new Date(), 2)}
+            disabled={disabled}
+            inputFormat={t('dateformat')}
+            label={t('dog.dob')}
+            mask={t('datemask')}
+            maxDate={subMonths(eventDate, minDogAgeMonths)}
+            minDate={subYears(new Date(), 15)}
+            onChange={(value) => value && onChange({ dog: { ...reg.dog, dob: value } })}
+            openTo={'year'}
+            renderInput={(params) => <TextField {...params} />}
+            value={reg.dog.dob || null}
+            views={['year', 'month', 'day']}
+          />
         </Grid>
-        <Grid item xs={'auto'} sx={{minWidth: 120}}>
-          <AutocompleteSingle
-            disableClearable
+        <Grid item xs={'auto'} sx={{ minWidth: 128 }}>
+          <AutocompleteSingle<DogGender|'', true>
             disabled={disabled}
             error={!disabled && !reg.dog.gender}
-            getOptionLabel={o => t(`dog.gender_choises.${o}`)}
+            getOptionLabel={o => o ? t(`dog.gender_choises.${o}`) : ''}
+            isOptionEqualToValue={(o, v) => o === v}
             label={t('dog.gender')}
-            onChange={(_e, value) => onChange({ dog: { ...reg.dog, gender: value } })}
+            onChange={(_e, value) => onChange({ dog: { ...reg.dog, gender: value ? value : undefined } })}
             options={['F', 'M'] as DogGender[]}
-            value={reg.dog.gender}
+            value={reg.dog.gender || ''}
           />
         </Grid>
         <Grid item container spacing={1}>
@@ -221,7 +219,7 @@ type TitlesAndNameProps = {
   id: string
   name?: string
   nameLabel: string
-  onChange: (props: {titles?: string, name?: string}) => void
+  onChange: (props: { titles?: string, name?: string }) => void
   titles?: string
   titlesLabel: string
 }
