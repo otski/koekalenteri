@@ -50,7 +50,7 @@ export const JudgeListPage = observer(function JudgeListPage() {
       field: 'eventTypes',
       flex: 2,
       headerName: t('eventTypes'),
-      valueGetter: (params) => params.row.eventTypes.join(', ')
+      valueGetter: (params) => params.row.eventTypes?.join(', ')
     }
   ];
 

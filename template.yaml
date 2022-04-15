@@ -239,10 +239,10 @@ Resources:
     Properties:
       TableName: !Join ['-', [event-type-table, !Ref AWS::StackName]]
       KeySchema:
-          - AttributeName: code
+          - AttributeName: eventType
             KeyType: HASH
       AttributeDefinitions:
-          - AttributeName: code
+          - AttributeName: eventType
             AttributeType: S
       Tags:
         - Key: Env
@@ -440,7 +440,7 @@ Resources:
               - ssm:GetParameters
               - ssm:GetParameter
               Resource: '*'
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref JudgeTable
         - CloudWatchPutMetricPolicy: {}
       Environment:
@@ -497,7 +497,7 @@ Resources:
               - ssm:GetParameters
               - ssm:GetParameter
               Resource: '*'
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref OrganizerTable
         - CloudWatchPutMetricPolicy: {}
       Environment:
