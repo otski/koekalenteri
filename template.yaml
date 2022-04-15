@@ -237,7 +237,7 @@ Resources:
   EventTypeTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Join ['-', [event-type-table, !Ref AWS::StackName]]
+      TableName: !Join ['-', [event-type-table,, 'v2', !Ref AWS::StackName]]
       KeySchema:
           - AttributeName: eventType
             KeyType: HASH
