@@ -4,12 +4,12 @@ import { EventFilter } from '../components';
 import { FilterProps } from '../stores/PublicStore';
 
 export const EventFilterContainer = observer(() => {
-  const { publicStore } = useStores();
+  const { rootStore, publicStore } = useStores();
 
   return (
     <EventFilter
-      judges={publicStore.judges}
-      organizers={publicStore.organizers}
+      judges={rootStore.judgeStore.judges}
+      organizers={rootStore.organizerStore.organizers}
       filter={{ ...publicStore.filter }}
       onChange={(filter: FilterProps) => publicStore.setFilter(filter)}
     />

@@ -1,8 +1,6 @@
-import { makeAutoObservable, runInAction } from 'mobx';
-import * as eventApi from '../api/event';
-import * as judgeApi from '../api/judge';
-import * as organizerApi from '../api/organizer';
-import type { EventEx, Judge, Organizer } from 'koekalenteri-shared/model';
+import { makeAutoObservable } from 'mobx';
+import { getEvent, getEvents } from '../api/event';
+import type { EventEx } from 'koekalenteri-shared/model';
 
 export type FilterProps = {
   start: Date | null
@@ -28,9 +26,6 @@ export class PublicStore {
     'NOWT': ['ALO', 'AVO', 'VOI']
   };
 
-  public judges: Judge[] = [];
-  public organizers: Organizer[] = [];
-
   public loaded: boolean = false;
   public loading: boolean = false;
   public filteredEvents: EventEx[] = [];
@@ -54,7 +49,7 @@ export class PublicStore {
   async setFilter(filter: FilterProps) {
     const reload = filter.start !== this.filter.start || filter.end !== this.filter.end;
     this.filter = filter;
-    return reload ? this.load(true) : this._applyFilter();
+    return reload ? this.load() : this._applyFilter();
   }
 
   setLoading(value: boolean) {
@@ -62,21 +57,11 @@ export class PublicStore {
     this.loaded = !value;
   }
 
-  async load(reload = false, signal?: AbortSignal) {
+  async load(signal?: AbortSignal) {
     this.setLoading(true);
-    this._events = (await eventApi.getEvents(signal))
+    this._events = (await getEvents(signal))
       .sort((a: EventEx, b: EventEx) => +new Date(a.startDate || new Date()) - +new Date(b.startDate || new Date()));
     this._applyFilter();
-
-    if (!reload) {
-      const judges = await judgeApi.getJudges(signal);
-      const organizers = await organizerApi.getOrganizers(signal);
-
-      runInAction(() => {
-        this.judges = judges;
-        this.organizers = organizers;
-      });
-    }
     this.setLoading(false);
   }
 
@@ -85,7 +70,7 @@ export class PublicStore {
     if (cached) {
       return cached;
     }
-    return eventApi.getEvent(eventType, id, signal);
+    return getEvent(eventType, id, signal);
   }
 
   private _applyFilter() {

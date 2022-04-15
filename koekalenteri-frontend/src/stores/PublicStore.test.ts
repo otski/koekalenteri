@@ -2,8 +2,6 @@ import { parseISO } from "date-fns";
 import { PublicStore } from "./PublicStore";
 
 jest.mock('../api/event');
-jest.mock('../api/judge');
-jest.mock('../api/organizer');
 
 test('PublicStore', async () => {
 
@@ -23,8 +21,6 @@ test('PublicStore', async () => {
   };
 
   expect(store.filteredEvents).toEqual([])
-  expect(store.judges).toEqual([])
-  expect(store.organizers).toEqual([])
   expect(store.loading).toEqual(false);
   expect(store.loaded).toEqual(false);
 
@@ -37,8 +33,6 @@ test('PublicStore', async () => {
 
   await store.load();
   expect(store.loaded).toEqual(true);
-  expect(store.judges.length).toEqual(3);
-  expect(store.organizers.length).toEqual(2);
   expect(store.filteredEvents.length).toEqual(3);
 
   const first = store.filteredEvents[0];
