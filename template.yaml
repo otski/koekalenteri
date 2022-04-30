@@ -491,7 +491,14 @@ Resources:
         - !Ref CommonLayer
       Tracing: Active
       Policies:
-        - DynamoDBReadPolicy:
+        - Statement:
+            - Sid: SSMGetParameterPolicy
+              Effect: Allow
+              Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+              Resource: '*'
+        - DynamoDBCrudPolicy:
             TableName: !Ref OfficialTable
         - CloudWatchPutMetricPolicy: {}
       Environment:
