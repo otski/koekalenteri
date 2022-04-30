@@ -17,6 +17,9 @@ export class JudgeStore {
   }
 
   async load(refresh?: boolean, signal?: AbortSignal) {
+    if (this.loading) {
+      return;
+    }
     runInAction(() => {
       this.loading = true;
     });
@@ -25,6 +28,10 @@ export class JudgeStore {
       data.forEach(json => this.updateJudge(json));
       this.loading = false;
     });
+  }
+
+  getJudge(id: number): CJudge | undefined {
+    return this.judges.find(item => item.id === id);
   }
 
   getJudges(ids?: number[]): CJudge[] {

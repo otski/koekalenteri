@@ -1,7 +1,6 @@
 import { CloudSync } from '@mui/icons-material';
-import { Button, Stack } from '@mui/material';
+import { Button, Stack, Theme, useMediaQuery } from '@mui/material';
 import { GridColDef } from '@mui/x-data-grid';
-import { Judge } from 'koekalenteri-shared/model';
 import { computed, toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
@@ -9,17 +8,19 @@ import { useTranslation } from 'react-i18next';
 import { QuickSearchToolbar, StyledDataGrid } from '../components';
 import { FullPageFlex } from '../layout';
 import { useStores } from '../stores';
+import { COfficial } from '../stores/classes/COfficial';
 import { AuthPage } from './AuthPage';
 
-interface JudgeColDef extends GridColDef {
-  field: keyof Judge
+interface OfficialColDef extends GridColDef {
+  field: keyof COfficial
 }
 
-export const JudgeListPage = observer(function JudgeListPage() {
+export const OfficialListPage = observer(function OfficialListPage() {
   const [searchText, setSearchText] = useState('');
-  const { t } = useTranslation();
+  const large = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'));
   const { rootStore } = useStores();
-  const columns: JudgeColDef[] = [
+  const { t } = useTranslation();
+  const columns: OfficialColDef[] = [
     {
       field: 'name',
       flex: 1,
@@ -34,18 +35,21 @@ export const JudgeListPage = observer(function JudgeListPage() {
     },
     {
       field: 'location',
-      flex: 1,
+      flex: 0,
       headerName: t('registration.contact.city'),
+      width: 120
     },
     {
       field: 'phone',
-      flex: 1,
+      flex: 0,
       headerName: t('registration.contact.phone'),
+      width: 150
     },
     {
       field: 'email',
-      flex: 2,
+      flex: 1,
       headerName: t('registration.contact.email'),
+      minWidth: 150,
     },
     {
       field: 'district',
@@ -54,19 +58,19 @@ export const JudgeListPage = observer(function JudgeListPage() {
     },
     {
       field: 'eventTypes',
-      flex: 2,
+      flex: 1,
       headerName: t('eventTypes'),
       valueGetter: (params) => params.row.eventTypes?.join(', ')
     }
   ];
 
   const refresh = async () => {
-    rootStore.judgeStore.load(true);
+    rootStore.officialStore.load(true);
   };
 
   const rows = computed(() => {
     const lvalue = searchText.toLocaleLowerCase();
-    return toJS(rootStore.judgeStore.judges).filter(o => o.search.includes(lvalue));
+    return toJS(rootStore.officialStore.officials).filter(o => o.search.includes(lvalue));
   }).get();
 
   const requestSearch = (searchValue: string) => {
@@ -74,16 +78,21 @@ export const JudgeListPage = observer(function JudgeListPage() {
   };
 
   return (
-    <AuthPage title={t('judges')}>
+    <AuthPage title={t('officials')}>
       <FullPageFlex>
         <Stack direction="row" spacing={2}>
-          <Button startIcon={<CloudSync />} onClick={refresh}>{t('updateData', { data: 'judges' })}</Button>
+          <Button startIcon={<CloudSync />} onClick={refresh}>{t('updateData', { data: 'officials' })}</Button>
         </Stack>
 
         <StyledDataGrid
-          loading={rootStore.judgeStore.loading}
           autoPageSize
           columns={columns}
+          columnVisibilityModel={{
+            district: large,
+            eventTypes: large,
+            id: large,
+            location: large,
+          }}
           components={{ Toolbar: QuickSearchToolbar }}
           componentsProps={{
             toolbar: {
@@ -96,6 +105,7 @@ export const JudgeListPage = observer(function JudgeListPage() {
           density='compact'
           disableColumnMenu
           disableVirtualization
+          loading={rootStore.officialStore.loading}
           rows={rows}
         />
       </FullPageFlex>

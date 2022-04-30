@@ -1,5 +1,4 @@
 // Create a DocumentClient that represents the query to add an item
-import { APIGatewayProxyEventPathParameters } from 'aws-lambda';
 import DynamoDB, { ItemList, UpdateExpression } from 'aws-sdk/clients/dynamodb';
 import { JsonObject } from 'koekalenteri-shared/model';
 
@@ -36,7 +35,7 @@ export default class CustomDynamoClient {
     return data.Items?.filter(item => !item.deletedAt);
   }
 
-  async read<T>(key: APIGatewayProxyEventPathParameters | null, table?: string): Promise<T | undefined> {
+  async read<T>(key: Record<string, number|string|undefined> | null, table?: string): Promise<T | undefined> {
     if (!key) {
       console.warn('CustomDynamoClient.read: no key provoded, returning undefined');
       return;
