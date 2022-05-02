@@ -20,7 +20,6 @@ export class PublicStore {
   private _loaded = false;
   private _loading = false;
 
-  public eventTypes = ['NOU', 'NOME-B', 'NOME-A', 'NOWT'];
   public eventTypeClasses: Record<string, string[]> = {
     NOU: [],
     'NOME-B': ['ALO', 'AVO', 'VOI'],

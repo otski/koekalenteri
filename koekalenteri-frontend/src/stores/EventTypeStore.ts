@@ -21,6 +21,9 @@ export class EventTypeStore {
   }
 
   async load(refresh?: boolean, signal?: AbortSignal) {
+    if (this.loading) {
+      return;
+    }
     runInAction(() => {
       this.loading = true;
     });
