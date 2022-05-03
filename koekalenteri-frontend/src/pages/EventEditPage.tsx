@@ -1,4 +1,5 @@
 import { CircularProgress } from '@mui/material';
+import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
@@ -37,7 +38,7 @@ export const EventEditPage = observer(function EventEditPage({create}: {create?:
       {loading
         ? <CircularProgress />
         : <EventForm
-          event={!create && privateStore.selectedEvent ? privateStore.selectedEvent : privateStore.newEvent}
+          event={toJS(! create && privateStore.selectedEvent ? privateStore.selectedEvent : privateStore.newEvent)}
           eventTypes={rootStore.eventTypeStore.activeEventTypes.map(et => et.eventType)}
           eventTypeClasses={publicStore.eventTypeClasses}
           judges={rootStore.judgeStore.activeJudges.map(j => j.toJSON())}
