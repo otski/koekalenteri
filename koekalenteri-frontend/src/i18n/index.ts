@@ -50,6 +50,7 @@ i18n
 i18n.services.formatter?.add('dtshort', formatDate('eeeeee d.M. HH:mm'));
 i18n.services.formatter?.add('short', formatDate('eeeeee d.M.'));
 i18n.services.formatter?.add('weekday', formatDate('eeeeee'));
+i18n.services.formatter?.add('dmy', formatDate('d.M.Y'));
 i18n.services.formatter?.add('datespan', formatDateSpan);
 i18n.services.formatter?.add('distance', formatDistance);
 i18n.services.formatter?.add('lowercase', value => value.toLowerCase());

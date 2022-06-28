@@ -333,6 +333,33 @@ Resources:
             Method: get
             RestApiId: !Ref KoekalenteriApi
 
+  GetAdminEventsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: koekalenteri-backend
+      Handler: dist/handlers/event.getEventsHandler
+      Layers:
+        - !Ref CommonLayer
+      Tracing: Active
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref EventTable
+        - CloudWatchPutMetricPolicy: {}
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref EventTable
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          USE_DYNAMODB_LOCAL: "0"
+          DYNAMODB_LOCAL_URI: ""
+
+      Events:
+        GetEvents:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /admin/event
+            Method: get
+            RestApiId: !Ref KoekalenteriApi
+
   PutEventFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -354,7 +381,7 @@ Resources:
         PutEvent:
           Type: Api
           Properties:
-            Path: /event
+            Path: /admin/event
             Method: POST
             RestApiId: !Ref KoekalenteriApi
             #Auth:

@@ -2,7 +2,7 @@ import { EventType } from "koekalenteri-shared/model";
 import { makeAutoObservable, runInAction } from "mobx";
 import { getEventTypes, putEventType } from "../api/eventType";
 import { CEventType } from "./classes/CEventType";
-import { RootStore } from "./RootStore";
+import type { RootStore } from "./RootStore";
 
 export class EventTypeStore {
   rootStore
@@ -10,10 +10,11 @@ export class EventTypeStore {
   loading = false
 
   constructor(rootStore: RootStore) {
+    this.rootStore = rootStore;
+
     makeAutoObservable(this, {
       rootStore: false
     })
-    this.rootStore = rootStore;
   }
 
   get activeEventTypes() {
@@ -59,6 +60,8 @@ export class EventTypeStore {
     }
     eventType.updateFromJson(json)
   }
+
+  toJSON() { return {} }
 }
 
 

@@ -55,9 +55,9 @@ describe('putRegistrationHandler', function() {
     expect(result).toEqual({
       statusCode: 200,
       headers: defaultJSONHeaders,
-      body: JSON.stringify(item)
+      body: JSON.stringify({ registration: item, entries: 0, classes: [] })
     });
-    const data = JSON.parse(result.body);
+    const data = JSON.parse(result.body).registration;
     // compare only date part of timestamps (to avoid timing issues in tests)
     const timestamp = new Date().toISOString().substr(0, 10);
     expect(data.createdBy).toEqual('TEST');

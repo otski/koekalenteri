@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { useSnackbar } from 'notistack';
 import { useEffect } from 'react';

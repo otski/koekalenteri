@@ -17,8 +17,9 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^27.0.2",
+    "@types/jest": "^28.1.1",
     "concurrently": "^7.0.0",
+    "eslint-plugin-mobx": "^0.0.8",
     "rimraf": "^3.0.2",
     "typescript": "^4.5.5"
   }

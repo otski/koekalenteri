@@ -1,7 +1,7 @@
 import { CheckBoxOutlineBlankOutlined, CheckBoxOutlined, CloudSync } from '@mui/icons-material';
 import { Button, Stack, Switch } from '@mui/material';
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { computed, toJS } from 'mobx';
+import { computed, runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -36,11 +36,10 @@ export const EventTypeListPage = observer(function EventTypeListPage()  {
       headerName: t('active'),
       renderCell: (params: GridRenderCellParams<CEventType, CEventType>) => <Switch checked={!!params.value} onChange={async (_e, checked) => {
         try {
-          params.row.active = checked;
-          const props: any = { ...params.row };
-          delete props.store;
-          delete props.search;
-          await params.row.store.rootStore.eventTypeStore.save(props);
+          runInAction(() => {
+            params.row.active = checked;
+          });
+          await rootStore.eventTypeStore.save(params.row.toJSON());
         } catch(err) {
           console.log(err);
         }
@@ -61,7 +60,7 @@ export const EventTypeListPage = observer(function EventTypeListPage()  {
 
   const rows = computed(() => {
     const lvalue = searchText.toLocaleLowerCase();
-    return toJS(rootStore.eventTypeStore.eventTypes).filter(o => o.search.includes(lvalue));
+    return rootStore.eventTypeStore.eventTypes.filter(o => o.search.includes(lvalue));
   }).get();
 
   const requestSearch = (searchValue: string) => {

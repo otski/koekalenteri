@@ -14,6 +14,15 @@ declare module '@mui/material/styles/createPalette' {
     ok: string
     hover: string
     selected: string
+    weekdays: {
+      0: string
+      1: string
+      2: string
+      3: string
+      4: string
+      5: string
+      6: string
+    }
   }
 }
 
@@ -62,7 +71,16 @@ const theme = createTheme({
       tableHead: '#C4C4C4',
       ok: '#c1d4c9',
       hover: '#AFC1B7',
-      selected: '#D5E1DB'
+      selected: '#D5E1DB',
+      weekdays: {
+        0: '#AB46BE',
+        1: '#E67273',
+        2: '#FF8A63',
+        3: '#FFD550',
+        4: '#AFD582',
+        5: '#63B5F5',
+        6: '#7985CD',
+      }
     },
   },
   typography: {

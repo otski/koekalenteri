@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import React, { createContext, useContext, useMemo, useState } from "react";
 
 const AuthenticatorContext = createContext({

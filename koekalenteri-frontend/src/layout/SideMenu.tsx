@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { Accessibility, EmojiEventsOutlined, Event, Logout, PersonOutline, SupervisorAccount, Support } from '@mui/icons-material';
 import { Divider, Theme, Toolbar, useMediaQuery } from '@mui/material';
 import { useTranslation } from 'react-i18next';

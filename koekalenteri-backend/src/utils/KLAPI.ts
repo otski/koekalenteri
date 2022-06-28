@@ -77,13 +77,19 @@ export default class KLAPI {
           console.log('response: ' + JSON.stringify(json));
         } else {
           error = await res.text();
-          console.error('not ok', status, error);
+          console.error('not ok');
+          console.error('status: ' + status);
+          for (const line of error.split("\n")) {
+            console.error(line);
+          }
         }
       } catch (jse) {
+        console.error('json error');
         console.error(jse);
-        console.log(status, JSON.stringify(res));
+        console.log(status, JSON.stringify(res.body));
       }
     } catch (e: unknown) {
+      console.error('unknown');
       console.error(e);
       if (e instanceof Error) {
         error = e.message;

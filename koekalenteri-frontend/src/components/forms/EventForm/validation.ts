@@ -1,4 +1,4 @@
-import { Event, EventState, ShowContactInfo } from "koekalenteri-shared/model";
+import { AdminEvent, EventState, ShowContactInfo } from "koekalenteri-shared/model";
 import { PartialEvent } from ".";
 import { unique } from "../../../utils";
 import { ValidationResult, Validators } from '../validation';
@@ -6,15 +6,15 @@ import { ValidationResult, Validators } from '../validation';
 type EventCallback = (event: PartialEvent) => boolean;
 type EventFlag = boolean | EventCallback;
 type EventFlags = Partial<{
-  [Property in keyof Event]: EventFlag;
+  [Property in keyof AdminEvent]: EventFlag;
 }>
 
 type RequiredFieldState = Partial<{
-  [Property in keyof Event]: EventState;
+  [Property in keyof AdminEvent]: EventState;
 }>
 
 type RequiredFields = Partial<{
-  [Property in keyof Event]: boolean;
+  [Property in keyof AdminEvent]: boolean;
 }>
 
 const STATE_INCLUSION: Record<EventState, EventState[]> = {
@@ -72,8 +72,8 @@ const VALIDATORS: Validators<PartialEvent, 'event'> = {
     return list.length ? { key: 'classesJudge', opts: { field: 'classes', list, length: list.length }} : false;
   },
   contactInfo: (event, required) => {
-    const contactInfo = event.contactInfo;
-    if (required && !contactInfoShown(contactInfo?.official) && !contactInfoShown(contactInfo?.secretary)) {
+    const visibleContactInfo = event.visibleContactInfo;
+    if (required && !contactInfoShown(visibleContactInfo?.official) && !contactInfoShown(visibleContactInfo?.secretary)) {
       return 'contactInfo';
     }
     return false;
@@ -83,6 +83,20 @@ const VALIDATORS: Validators<PartialEvent, 'event'> = {
     const cost = event.cost || 0;
     if (event.costMember && cost < event.costMember) {
       return 'costMemberHigh';
+    }
+    return false;
+  },
+  entryStartDate: (event) => {
+    if (event.createdAt && event.entryStartDate) {
+      if (event.entryStartDate < event.createdAt) {
+        return { key: 'entryStartDate', opts: { field: 'entryStartDate', date: event.createdAt }}
+      }
+    }
+    return false;
+  },
+  entryEndDate: (event) => {
+    if (event.entryEndDate && event.entryEndDate >= event.startDate) {
+      return { key: 'entryEndDate', opts: { field: 'entryEndDate', date: event.startDate }}
     }
     return false;
   },
@@ -117,8 +131,8 @@ export function requiredFields(event: PartialEvent): FieldRequirements {
   for (const state of states) {
     const required = REQUIRED_BY_STATE[state];
     for (const prop in required) {
-      result.state[prop as keyof Event] = state;
-      result.required[prop as keyof Event] = resolve(required[prop as keyof Event] || false, event);
+      result.state[prop as keyof AdminEvent] = state;
+      result.required[prop as keyof AdminEvent] = resolve(required[prop as keyof AdminEvent] || false, event);
     }
   }
   return result;
@@ -128,7 +142,7 @@ function resolve(value: EventFlag | undefined, event: PartialEvent): boolean {
   return typeof value === 'function' ? value(event) : !!value;
 }
 
-export function validateEventField(event: PartialEvent, field: keyof Event, required: boolean): ValidationResult<PartialEvent, 'event'> {
+export function validateEventField(event: PartialEvent, field: keyof AdminEvent, required: boolean): ValidationResult<PartialEvent, 'event'> {
   const validator = VALIDATORS[field] || (() => required && (typeof event[field] === 'undefined' || event[field] === ''));
   const result = validator(event, required);
   if (!result) {
@@ -155,12 +169,12 @@ export function validateEventField(event: PartialEvent, field: keyof Event, requ
 export function validateEvent(event: PartialEvent) {
   const required = requiredFields(event).required;
   const errors = [];
-  let field: keyof Event;
-  const fields = unique(Object.keys(event).concat(Object.keys(required))) as Array<keyof Event>;
+  let field: keyof AdminEvent;
+  const fields = unique(Object.keys(event).concat(Object.keys(required))) as Array<keyof AdminEvent>;
   for (field of fields) {
     const result = validateEventField(event, field, !!required[field]);
     if (result) {
-      console.log(result);
+      // console.log(result);
       errors.push(result);
     }
   }

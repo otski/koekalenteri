@@ -3,6 +3,7 @@ import { AWSError } from "aws-sdk";
 
 const DEFAULT_OPTIONS = { method: "GET", headers: {}, query: {}, path: "/" }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function constructAPIGwEvent(message: any, options: any = DEFAULT_OPTIONS): APIGatewayProxyEvent {
   const opts = Object.assign({}, DEFAULT_OPTIONS, options);
   return {

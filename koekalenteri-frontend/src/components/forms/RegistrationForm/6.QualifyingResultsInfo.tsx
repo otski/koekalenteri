@@ -1,17 +1,21 @@
 import { AddOutlined, DeleteOutline } from '@mui/icons-material';
-import { DatePicker } from '@mui/lab';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Button, debounce, FormControl, Grid, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import { subYears } from 'date-fns';
 import { QualifyingResult, Registration, TestResult } from 'koekalenteri-shared/model';
+import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
 import { CollapsibleSection } from '../..';
-import { EventResultRequirement, EventResultRequirements, EventResultRequirementsByDate, getRequirements, RegistrationClass } from './rules';
+import { CRegistration } from '../../../stores/classes/CRegistration';
+import { EventResultRequirement, EventResultRequirements, EventResultRequirementsByDate, getRequirements, RegistrationClass } from '../../../rules';
 import { objectContains } from './validation';
+import { runInAction } from 'mobx';
+import { CTestResult } from '../../../stores/classes';
 
 type QualifyingResultsInfoProps = {
-  reg: Registration
+  reg: CRegistration
   error?: boolean
   helperText?: string
   onChange: (props: Partial<Registration>) => void
@@ -21,9 +25,15 @@ type QualifyingResultsInfoProps = {
 
 type QRWithId = Partial<QualifyingResult> & { id: string };
 const asArray = (v: EventResultRequirements | EventResultRequirement) => Array.isArray(v) ? v : [v];
-export function QualifyingResultsInfo({ reg, error, helperText, onChange, onOpenChange, open }: QualifyingResultsInfoProps) {
+export const QualifyingResultsInfo = observer(function QualifyingResultsInfo({ reg, error, helperText, onChange, onOpenChange, open }: QualifyingResultsInfoProps) {
   const { t } = useTranslation();
-  const requirements = useMemo(() => getRequirements(reg.eventType, reg.class as RegistrationClass, reg.dates && reg.dates.length ? reg.dates[0].date : new Date()) || {rules: []}, [reg.eventType, reg.class, reg.dates]);
+  const requirements = useMemo(
+    () => {
+      const eventDate = reg.dates && reg.dates.length ? reg.dates[0].date : new Date();
+      return getRequirements(reg.eventType, reg.class as RegistrationClass, eventDate) || { rules: [] }
+    },
+    [reg.eventType, reg.class, reg.dates]
+  );
   const [results, setResults] = useState<Array<QRWithId>>([]);
   const sendChange = useMemo(() => debounce(onChange, 300), [onChange]);
   const handleChange = (result: QRWithId, props: Partial<TestResult>) => {
@@ -59,7 +69,7 @@ export function QualifyingResultsInfo({ reg, error, helperText, onChange, onOpen
                   disabled={result.official}
                   label={t("testResult.eventType")}
                   labelId="type-label"
-                  onChange={(e) => handleChange(result, {type: e.target.value})}
+                  onChange={(e) => handleChange(result, { type: e.target.value })}
                   value={result.type}
                 >
                   <MenuItem value="NOU">NOU</MenuItem>
@@ -76,7 +86,7 @@ export function QualifyingResultsInfo({ reg, error, helperText, onChange, onOpen
                   disabled={result.official}
                   label={t("testResult.result")}
                   labelId="result-label"
-                  onChange={(e) => handleChange(result, {result: e.target.value, class: e.target.value.slice(0, -1)})}
+                  onChange={(e) => handleChange(result, { result: e.target.value, class: e.target.value.slice(0, -1) })}
                   sx={{
                     '& fieldset': {
                       borderColor: resultBorderColor(result.qualifying),
@@ -144,22 +154,29 @@ export function QualifyingResultsInfo({ reg, error, helperText, onChange, onOpen
                 value={result.judge}
               />
             </Grid>
-            <Grid item sx={{display: result.official ? 'none' : 'block'}}>
+            <Grid item sx={{ display: result.official ? 'none' : 'block' }}>
               <Button startIcon={<DeleteOutline />} onClick={() => onChange({
                 results: (reg.results || []).filter(r => r.id !== result.id)
               })}>Poista tulos</Button>
             </Grid>
           </Grid>
         )}
-        <Button startIcon={<AddOutlined />} onClick={() => onChange({
-          results: (reg.results || []).concat([createMissingResult(requirements, results)])
-        })}>Lisää tulos</Button>
+        <Button
+          startIcon={<AddOutlined />}
+          onClick={() => runInAction(() => {
+            const result = new CTestResult(reg.dog);
+            result.updateFromRule(findFirstMissingRule(requirements, results));
+            reg.results.push(new CTestResult(reg.dog))
+          })
+          }>
+          Lisää tulos
+        </Button>
       </Grid>
     </CollapsibleSection>
   );
-}
+});
 
-function findFirstMissing(requirements: EventResultRequirementsByDate | { rules: EventResultRequirements }, results: QRWithId[]) {
+function findFirstMissingRule(requirements: EventResultRequirementsByDate | { rules: EventResultRequirements }, results: QRWithId[]) {
   for (const rule of requirements.rules) {
     for (const opt of asArray(rule)) {
       const { count, ...rest } = opt;
@@ -171,7 +188,7 @@ function findFirstMissing(requirements: EventResultRequirementsByDate | { rules:
 }
 
 function createMissingResult(requirements: EventResultRequirementsByDate | { rules: EventResultRequirements }, results: QRWithId[]) {
-  const rule = findFirstMissing(requirements, results);
+  const rule = findFirstMissingRule(requirements, results);
   return {
     id: uuidv4(),
     ...rule
@@ -187,7 +204,7 @@ function resultBorderColor(qualifying: boolean | undefined) {
   }
 }
 
-function getResultId(result: QRWithId|QualifyingResult) {
+function getResultId(result: QRWithId | QualifyingResult) {
   if ('id' in result) {
     return result.id;
   }

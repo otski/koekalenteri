@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
 import { Box, Collapse, FormHelperText, IconButton, Typography } from '@mui/material';
 import { ReactNode, useState } from 'react';

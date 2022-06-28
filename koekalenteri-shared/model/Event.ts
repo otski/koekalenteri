@@ -1,43 +1,74 @@
 import { DbRecord, JsonDbRecord, NotOptional, Official, Organizer, Replace, ReplaceOptional, Secretary } from '.';
+import { Judge, Person } from './Person';
 
-export interface JsonEvent extends JsonDbRecord {
-  kcId?: number
-  state: EventState
-  organizer: Organizer
-  eventType: string
-  classes: Array<JsonEventClass>
-  startDate?: string
-  endDate?: string
-  entryStartDate?: string
-  entryEndDate?: string
-  location: string
-  headquerters?: Partial<Headquarters>
-  name: string
-  description: string
-  places: number
-  entries: number
-  allowOwnerMembershipPriority: boolean
+export interface JsonEvent {
+  accountNumber: string
   allowHandlerMembershipPriority: boolean
+  allowOwnerMembershipPriority: boolean
+  classes: Array<JsonEventClass>
+  contactInfo?: ContactInfo
   cost: number
   costMember: number
+  description: string
+  endDate: string
+  entries: number
+  entryEndDate?: string
+  entryOrigEndDate?: string
+  entryStartDate?: string
+  eventType: string
+  id: string
+  judges: Judge[]|number[]
+  location: string
+  name: string
+  official?: Official
+  organizer?: Organizer
   paymentDetails: string
-  accountNumber: string
+  places: number
   referenceNumber: string
-  judges: Array<number>
-  official: Official
-  secretary: Secretary
-  contactInfo?: Partial<ContactInfo>
+  startDate: string
+  state: EventState
 }
 
-export type Event = DbRecord & Replace<ReplaceOptional<Omit<JsonEvent, keyof JsonDbRecord>, 'startDate' | 'endDate' | 'entryStartDate' | 'entryEndDate', Date>, 'classes', Array<EventClass>>
+export interface JsonAdminEvent extends JsonDbRecord, JsonEvent {
+  headquerters?: Partial<Headquarters>
+  kcId?: number
+  secretary?: Secretary
+  visibleContactInfo?: Partial<VisibleContactInfo>
+}
+
+export type Event = { id: string } &
+  Replace<
+    Replace<
+      ReplaceOptional<
+        Omit<JsonEvent, keyof JsonDbRecord>,
+        'entryStartDate' | 'entryEndDate' | 'entryOrigEndDate',
+        Date
+      >,
+      'startDate' | 'endDate',
+      Date
+    >,
+    'classes',
+    Array<EventClass>
+  >
+export type AdminEvent = DbRecord &
+  Replace<
+    Replace<
+      ReplaceOptional<
+        Omit<JsonAdminEvent, keyof JsonDbRecord>,
+        'startDate' | 'endDate' | 'entryStartDate' | 'entryEndDate' | 'entryOrigEndDate',
+        Date
+      >,
+      'startDate' | 'endDate',
+      Date
+    >,
+    'classes',
+    Array<EventClass>
+  >
 
 export type JsonEventClass = {
   class: string
   date?: string
-  judge?: {
-    id: number,
-    name: string
-  },
+  judge?: Judge,
   places?: number
   entries?: number
   members?: number
@@ -53,7 +84,7 @@ export type Headquarters = {
   postalDistrict: string
 }
 
-export type ContactInfo = {
+export type VisibleContactInfo = {
   official: ShowContactInfo
   secretary: ShowContactInfo
 }
@@ -64,16 +95,13 @@ export type ShowContactInfo = {
   phone: boolean
 }
 
-export interface EventEx extends Event {
-  isEntryOpen: boolean
-  isEntryClosing: boolean
-  isEntryUpcoming: boolean
+export type ContactPerson = Partial<Omit<Person, 'location'>>
+
+export type ContactInfo = {
+  official?: ContactPerson
+  secretary?: ContactPerson
 }
 
-export type ConfirmedEventEx = Replace<EventEx, 'startDate'|'endDate'|'entryStartDate'|'entryEndDate', Date> & {
-  state: 'confirmed'
-}
-
-export type JsonConfirmedEvent = NotOptional<JsonEvent, 'startDate'|'endDate'|'entryStartDate'|'entryEndDate'> & {
+export type JsonConfirmedEvent = NotOptional<JsonEvent, 'startDate' | 'endDate' | 'entryStartDate' | 'entryEndDate'> & {
   state: 'confirmed'
 }

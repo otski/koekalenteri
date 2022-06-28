@@ -16,10 +16,12 @@ export type Official = OfficialPerson & {
   eventTypes: string[]
 }
 
-export type Judge = OfficialPerson & {
+export type JsonJudge = OfficialPerson & {
   district: string
   eventTypes: string[]
   languages: string[]
   active?: boolean
   official?: boolean
 }
+
+export type Judge = JsonJudge;

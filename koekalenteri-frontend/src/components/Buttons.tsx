@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { Box, Button, ButtonProps, IconButton, Stack, Theme, Typography, useMediaQuery } from '@mui/material';
 import { MouseEventHandler, ReactNode } from 'react';
 import { Link } from 'react-router-dom';

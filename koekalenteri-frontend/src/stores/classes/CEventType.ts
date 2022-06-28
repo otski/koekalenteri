@@ -12,12 +12,12 @@ export class CEventType {
   store: EventTypeStore;
 
   constructor(store: EventTypeStore, eventType: string) {
-    makeAutoObservable(this, {
-      eventType: false,
-      store: false,
-    });
     this.store = store;
     this.eventType = eventType;
+
+    makeAutoObservable(this, {
+      store: false
+    });
   }
 
   updateFromJson(json: EventType) {

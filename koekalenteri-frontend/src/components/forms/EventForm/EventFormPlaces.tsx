@@ -3,20 +3,21 @@ import { eachDayOfInterval, isSameDay } from 'date-fns';
 import { EventClass } from 'koekalenteri-shared/model';
 import { useTranslation } from 'react-i18next';
 import { unique } from '../../../utils';
-import { compareEventClass } from './EventClasses';
+import { isSameEventClass } from './EventClasses';
 import { EntrySectionProps } from './3.EntrySection';
+import { observer } from 'mobx-react-lite';
 
-export function EventFormPlaces({ event, helperTexts, onChange }: EntrySectionProps) {
+export const EventFormPlaces = observer(function EventFormPlaces({ event, helperTexts, onChange }: EntrySectionProps) {
   const { t } = useTranslation();
-  const days = eachDayOfInterval({
+  const days = event.startDate <= event.endDate ? eachDayOfInterval({
     start: event.startDate,
     end: event.endDate
-  });
+  }) : [];
   const uniqueClasses = unique(event.classes.map(c => c.class));
   const classesByDays = days.map(day => ({ day, classes: event.classes.filter(c => isSameDay(c.date || event.startDate, day)) }));
   const handleChange = (c: EventClass) => (e: { target: { value: any; }; }) => {
     const newClasses = [...event.classes];
-    const cls = newClasses.find(ec => compareEventClass(ec, c) === 0);
+    const cls = newClasses.find(ec => isSameEventClass(ec, c));
     if (cls) {
       cls.places = validValue(e.target.value);
     }
@@ -77,7 +78,7 @@ export function EventFormPlaces({ event, helperTexts, onChange }: EntrySectionPr
     </>
 
   );
-}
+})
 
 const validValue = (s: string) => {
   let value = +s;
@@ -90,7 +91,7 @@ const validValue = (s: string) => {
   return value;
 };
 
-function PlacesInput(props: JSX.IntrinsicAttributes & TextFieldProps) {
+const PlacesInput = observer(function PlacesInput(props: JSX.IntrinsicAttributes & TextFieldProps) {
   return (
     <TextField
       {...props}
@@ -100,8 +101,8 @@ function PlacesInput(props: JSX.IntrinsicAttributes & TextFieldProps) {
       InputProps={{ inputProps: { min: 0, max: 999, style: {textAlign: 'right', padding: 4} } }}
     >
     </TextField>);
-}
+})
 
-function PlacesDisplay({ value }: { value: number }) {
+const PlacesDisplay = observer(function PlacesDisplay({ value }: { value: number }) {
   return (<>{value === 0 ? '' : value}</>);
-}
+})

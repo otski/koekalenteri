@@ -1,34 +1,38 @@
 import { Checkbox, FormControlLabel, FormGroup, FormHelperText, Grid } from "@mui/material";
-import { ContactInfo, Event, ShowContactInfo } from "koekalenteri-shared/model";
+import { VisibleContactInfo, ShowContactInfo, AdminEvent } from "koekalenteri-shared/model";
+import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
-import { CollapsibleSection, PartialEvent } from "../..";
+import { CollapsibleSection } from "../..";
+import { CAdminEvent } from "../../../stores/classes";
 import { EventContactInfo } from "../../EventContactInfo";
 import { FieldRequirements } from "./validation";
 
 type ContactInfoSectionParams = {
-  event: PartialEvent
-  errorStates: { [Property in keyof Event]?: boolean }
-  helperTexts: { [Property in keyof Event]?: string }
+  event: CAdminEvent
+  errorStates: { [Property in keyof AdminEvent]?: boolean }
+  helperTexts: { [Property in keyof AdminEvent]?: string }
   fields: FieldRequirements
-  onChange: (props: Partial<Event>) => void
+  onChange: (props: Partial<AdminEvent>) => void
   onOpenChange?: (value: boolean) => void
   open?: boolean
 };
 
-export function ContactInfoSection({ event, helperTexts, onChange, onOpenChange, open }: ContactInfoSectionParams) {
+export const ContactInfoSection = observer(function ContactInfoSection({ event, errorStates, helperTexts, onChange, onOpenChange, open }: ContactInfoSectionParams) {
   const { t } = useTranslation();
-  const handleChange = (props: Partial<ContactInfo>) => onChange({ contactInfo: { ...(event.contactInfo || {}), ...props } });
+  const handleChange = (props: Partial<VisibleContactInfo>) => onChange({ visibleContactInfo: { ...event.visibleContactInfo, ...props } });
   const helperText = helperTexts.contactInfo || '';
+  const error = errorStates.contactInfo;
+  const sectionHelper = open ? '' : error ? helperText : JSON.stringify(event.visibleContactInfo);
 
   return (
-    <CollapsibleSection title={t('event.contactInfo')} open={open} onOpenChange={onOpenChange}>
+    <CollapsibleSection title={t('event.contactInfo')} open={open} onOpenChange={onOpenChange} error={error} helperText={sectionHelper}>
       <Grid container spacing={1}>
         <Grid item container spacing={1}>
           <Grid item>
-            <PersonContactInfo contact='official' show={event.contactInfo?.official} onChange={handleChange} />
+            <PersonContactInfo contact='official' show={event.visibleContactInfo?.official} onChange={handleChange} />
           </Grid>
           <Grid item>
-            <PersonContactInfo contact='secretary' show={event.contactInfo?.secretary} onChange={handleChange} />
+            <PersonContactInfo contact='secretary' show={event.visibleContactInfo?.secretary} onChange={handleChange} />
           </Grid>
         </Grid>
       </Grid>
@@ -37,9 +41,9 @@ export function ContactInfoSection({ event, helperTexts, onChange, onOpenChange,
       <EventContactInfo event={event} />
     </CollapsibleSection>
   );
-}
+})
 
-function PersonContactInfo({contact, show, onChange}: { contact: 'official'|'secretary', show?: Partial<ShowContactInfo>, onChange: (props: Partial<ContactInfo>) => void }) {
+const PersonContactInfo = observer(function PersonContactInfo({contact, show, onChange}: { contact: 'official'|'secretary', show?: Partial<ShowContactInfo>, onChange: (props: Partial<VisibleContactInfo>) => void }) {
   const { t } = useTranslation();
   const handleChange = (props: Partial<ShowContactInfo>) => onChange({ [contact]: {...show, ...props} });
 
@@ -62,4 +66,4 @@ function PersonContactInfo({contact, show, onChange}: { contact: 'official'|'sec
       </FormGroup>
     </>
   );
-}
+})

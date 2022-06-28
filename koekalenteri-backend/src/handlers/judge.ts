@@ -37,6 +37,8 @@ export const getJudgesHandler = metricScope((metrics: MetricsLogger) =>
                 official: true
               });
             }
+          } else {
+            metricsError(metrics, event.requestContext, 'getJudges:' + eventType);
           }
         }
       }

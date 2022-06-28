@@ -1,4 +1,4 @@
-import { Judge } from "koekalenteri-shared/model";
+import { JsonJudge } from "koekalenteri-shared/model";
 import { makeAutoObservable } from "mobx";
 import { JudgeStore } from "../JudgeStore";
 
@@ -18,15 +18,16 @@ export class CJudge {
   store: JudgeStore;
 
   constructor(store: JudgeStore, id: number) {
+    this.id = id;
+    this.store = store;
+
     makeAutoObservable(this, {
       id: false,
       store: false,
     });
-    this.id = id;
-    this.store = store;
   }
 
-  updateFromJson(json: Judge) {
+  updateFromJson(json: JsonJudge) {
     this.active = json.active;
     this.district = json.district;
     this.email = json.email;
@@ -39,7 +40,7 @@ export class CJudge {
     this.search = [json.district, json.email, ...(json.eventTypes || []), json.location, json.name, json.phone].map(v => v?.toLocaleLowerCase() || '').join(' ');
   }
 
-  toJSON(): Judge {
+  toJSON(): JsonJudge {
     return {
       active: this.active,
       district: this.district,

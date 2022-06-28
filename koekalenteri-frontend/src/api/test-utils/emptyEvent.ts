@@ -1,25 +1,23 @@
-import type { Event } from 'koekalenteri-shared/model';
+import type { JsonAdminEvent, Judge } from 'koekalenteri-shared/model';
 
-export const emptyEvent: Event = {
+const defaultDate = new Date('1990-01-01').toISOString();
+
+export const emptyEvent: JsonAdminEvent = {
   accountNumber: 'test',
   allowHandlerMembershipPriority: true,
   allowOwnerMembershipPriority: true,
   classes: [{ class: 'test' }],
   cost: 123,
   costMember: 123,
-  createdAt: new Date('1989-01-01'),
-  createdBy: 'test',
   description: 'test',
-  endDate: new Date('1990-01-01'),
+  endDate: defaultDate,
   entries: 0,
-  entryEndDate: new Date('1990-01-01'),
-  entryStartDate: new Date('1990-01-01'),
+  entryEndDate: defaultDate,
+  entryStartDate: defaultDate,
   eventType: 'test',
   id: 'test',
-  judges: [123],
+  judges: [{ id: 123, name: 'test judge' } as Judge],
   location: 'test',
-  modifiedAt: new Date('1989-01-02'),
-  modifiedBy: 'test',
   name: 'test',
   official: {
     id: 1,
@@ -30,13 +28,6 @@ export const emptyEvent: Event = {
     district: 'Helsinki',
     eventTypes: ['test']
   },
-  secretary: {
-    id: 2,
-    name: 'Siiri Sihteeri',
-    email: 'ei@joo.com',
-    phone: '040-secretary',
-    location: 'Ruotsi'
-  },
   organizer: {
     id: 1,
     name: 'Suomen Noutajakoirajärjestö ry'
@@ -44,6 +35,10 @@ export const emptyEvent: Event = {
   paymentDetails: 'test',
   places: 10,
   referenceNumber: 'test',
-  startDate: new Date('1990-01-01'),
-  state: 'confirmed'
+  startDate: defaultDate,
+  state: 'confirmed',
+  createdAt: defaultDate,
+  createdBy: 'mock',
+  modifiedAt: defaultDate,
+  modifiedBy: 'mock'
 }

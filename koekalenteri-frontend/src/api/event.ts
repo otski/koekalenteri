@@ -1,46 +1,35 @@
-import { Event, EventEx, JsonEvent, JsonRegistration, QualifyingResult, Registration, RegistrationDate } from 'koekalenteri-shared/model';
-import { rehydrateDog } from './dog';
+import { JsonAdminEvent, JsonEvent, JsonEventClass, JsonRegistration, Registration } from 'koekalenteri-shared/model';
 import http from './http';
-import { rehydrateEvent } from './utils';
 
-const PATH = '/event/';
-
-export async function getEvents(signal?: AbortSignal): Promise<EventEx[]> {
-  const jsonEvents = await http.get<Array<JsonEvent>>(PATH, {signal});
-  return jsonEvents.map(item => rehydrateEvent(item));
+export async function getEvents(signal?: AbortSignal): Promise<JsonEvent[]> {
+  return http.get<Array<JsonEvent>>('/event', {signal});
 }
 
-export async function getEvent(eventType: string, id: string, signal?: AbortSignal): Promise<EventEx> {
-  const jsonEvent = await http.get<JsonEvent>(`${PATH}${eventType}/${id}`, {signal});
-  return rehydrateEvent(jsonEvent);
+export async function getEvent(eventType: string, id: string, signal?: AbortSignal): Promise<JsonEvent> {
+  return http.get<JsonEvent>(`/event/${eventType}/${id}`, {signal});
 }
 
-export async function putEvent(event: Partial<Event>): Promise<EventEx> {
-  return rehydrateEvent(await http.post<Partial<Event>, JsonEvent>(PATH, event));
+export async function getRegistrations(eventId: string, signal?: AbortSignal): Promise<JsonRegistration[]> {
+  return http.get<Array<JsonRegistration>>(`/registration/${eventId}`, {signal})
 }
 
-export async function getRegistrations(eventId: string, signal?: AbortSignal): Promise<Registration[]> {
-  const jsonRegistrations = await http.get<Array<JsonRegistration>>(`/registration/${eventId}`, {signal})
-  return jsonRegistrations.map(item => rehydrateRegistration(item));
+export async function getRegistration(eventId: string, id: string, signal?: AbortSignal): Promise<JsonRegistration | undefined> {
+  return http.get<JsonRegistration>(`registration/${eventId}/${id}`, {signal});
 }
 
-export async function getRegistration(eventId: string, id: string, signal?: AbortSignal): Promise<Registration | undefined> {
-  return rehydrateRegistration(await http.get<JsonRegistration>(`registration/${eventId}/${id}`, {signal}));
+export type RegistrationResult = {
+  registration: JsonRegistration,
+  entries: number,
+  classes: JsonEventClass[]
+}
+export async function putRegistration(registration: Registration): Promise<RegistrationResult> {
+  return http.post<Registration, RegistrationResult>('/event/register', registration);
 }
 
-export async function putRegistration(registration: Registration): Promise<Registration> {
-  return rehydrateRegistration(await http.post<Registration, JsonRegistration>(PATH + 'register/', registration));
+export async function getAdminEvents(signal?: AbortSignal): Promise<JsonAdminEvent[]> {
+  return http.get<Array<JsonAdminEvent>>('/admin/event', {signal});
 }
 
-export function rehydrateRegistration(json: JsonRegistration): Registration {
-  return {
-    ...json,
-    createdAt: new Date(json.createdAt),
-    dates: json.dates?.map<RegistrationDate>(d => ({ ...d, date: new Date(d.date) })),
-    deletedAt: json.deletedAt ? new Date(json.deletedAt) : undefined,
-    dog: rehydrateDog(json.dog),
-    modifiedAt: new Date(json.modifiedAt),
-    qualifyingResults: json.qualifyingResults.map<QualifyingResult>(r => ({ ...r, date: new Date(r.date) })),
-    results: json.results?.map(r => ({ ...r, date: new Date(r.date), official: false })),
-  };
+export async function putEvent(event: Partial<JsonAdminEvent>): Promise<JsonAdminEvent> {
+  return http.post<Partial<JsonAdminEvent>, JsonAdminEvent>('/admin/event', event);
 }

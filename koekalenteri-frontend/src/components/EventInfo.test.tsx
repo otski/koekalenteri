@@ -1,10 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { EventInfo } from './EventInfo';
 import { emptyEvent } from '../api/test-utils/emptyEvent';
+import { JsonEvent, Judge } from 'koekalenteri-shared/model';
+import { CEvent } from '../stores/classes';
+import { RootStore } from '../stores/RootStore';
 
-
-test('It should render event information', async function() {
-  const event = {
+it('should render event information', async function() {
+  const store = new RootStore();
+  const data: JsonEvent = {
     ...emptyEvent,
     organizer: {
       id: 0,
@@ -12,23 +15,23 @@ test('It should render event information', async function() {
     },
     name: 'name',
     location: 'location',
-    startDate: new Date('2021-02-10'),
-    endDate: new Date('2021-02-11'),
-    entryStartDate: new Date('2021-01-20'),
-    entryEndDate: new Date('2021-02-04'),
+    startDate: new Date('2021-02-10').toISOString(),
+    endDate: new Date('2021-02-11').toISOString(),
+    entryStartDate: new Date('2021-01-20').toISOString(),
+    entryEndDate: new Date('2021-02-04').toISOString(),
     description: 'event description text',
     classes: [{
-      date: new Date('2021-02-10'),
+      date: new Date('2021-02-10').toISOString(),
       class: 'TestClass',
-      judge: { id: 1, name: 'Test Judge' },
+      judge: { id: 1, name: 'Test Judge' } as Judge,
       places: 11,
       entries: 22,
       members: 2
     }],
-    isEntryOpen: false,
-    isEntryClosing: false,
-    isEntryUpcoming: false
+    judges: [{ id: 1, name: 'Test Judge' } as Judge]
   };
+  const event = new CEvent(store.eventStore);
+  event.updateFromJson(data);
   render(<EventInfo event={event} />);
 
   // entry dates

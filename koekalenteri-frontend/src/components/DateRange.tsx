@@ -1,4 +1,5 @@
-import { DatePicker, PickersDay } from "@mui/lab";
+/* eslint-disable mobx/missing-observer */
+import { DatePicker, PickersDay } from '@mui/x-date-pickers';
 import { Box, FormControl, TextField, Theme } from "@mui/material";
 import { isSameDay, startOfDay } from "date-fns";
 import { useTranslation } from 'react-i18next';
@@ -39,7 +40,7 @@ export function DateRange({ start, end, startLabel, endLabel, defaultStart, defa
     <Box sx={{width: '100%'}}>
       <FormControl sx={{pr: 0.5, width: '50%'}}>
         <DatePicker
-          allowSameDateSelection
+          componentsProps={{ actionBar: { actions: ['clear'] } }}
           defaultCalendarMonth={defaultStart}
           label={startLabel}
           value={start}
@@ -47,7 +48,6 @@ export function DateRange({ start, end, startLabel, endLabel, defaultStart, defa
           inputFormat={t('dateformat')}
           minDate={range?.start}
           maxDate={range?.end}
-          clearable={true}
           showToolbar={false}
           onChange={startChanged}
           renderDay={(date, selectedDates, props) => <PickersDay {...props} sx={dayStyle(date, selectedDates, defaultStart)} />}
@@ -57,7 +57,7 @@ export function DateRange({ start, end, startLabel, endLabel, defaultStart, defa
 
       <FormControl sx={{pl: 0.5, width: '50%'}}>
         <DatePicker
-          allowSameDateSelection
+          componentsProps={{ actionBar: { actions: ['clear'] } }}
           defaultCalendarMonth={defaultEnd}
           label={endLabel}
           value={end}
@@ -65,7 +65,6 @@ export function DateRange({ start, end, startLabel, endLabel, defaultStart, defa
           inputFormat={t('dateformat')}
           minDate={start ? start : range?.start}
           maxDate={range?.end}
-          clearable={true}
           showToolbar={false}
           onChange={endChanged}
           renderDay={(date, selectedDates, props) => <PickersDay {...props} sx={dayStyle(date, selectedDates, defaultEnd)} />}

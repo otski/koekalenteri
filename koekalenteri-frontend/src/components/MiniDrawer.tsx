@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { MouseEventHandler, ReactNode } from 'react';
 import { CSSObject, Drawer, List, ListItem, ListItemIcon, ListItemText, styled, Theme, Tooltip } from '@mui/material';
 

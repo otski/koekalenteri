@@ -1,16 +1,18 @@
 import { Grid, TextField } from "@mui/material";
-import { Event, Headquarters } from "koekalenteri-shared/model";
+import { AdminEvent, Headquarters } from "koekalenteri-shared/model";
+import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
-import { CollapsibleSection, PartialEvent } from "../..";
+import { CollapsibleSection } from "../..";
+import { CAdminEvent } from "../../../stores/classes";
 
 type HeadquartersSectionProps = {
-  event: PartialEvent
-  onChange: (props: Partial<Event>) => void;
+  event: CAdminEvent
+  onChange: (props: Partial<AdminEvent>) => void;
   onOpenChange?: (value: boolean) => void
   open?: boolean
 }
 
-export function HeadquartersSection({ event, onChange, onOpenChange, open }: HeadquartersSectionProps) {
+export const HeadquartersSection = observer(function HeadquartersSection({ event, onChange, onOpenChange, open }: HeadquartersSectionProps) {
   const { t } = useTranslation();
   const handleChange = (props: Partial<Headquarters>) => onChange({ headquerters: { ...(event.headquerters || {}), ...props } });
 
@@ -36,4 +38,4 @@ export function HeadquartersSection({ event, onChange, onOpenChange, open }: Hea
       </Grid>
     </CollapsibleSection>
   );
-}
+})

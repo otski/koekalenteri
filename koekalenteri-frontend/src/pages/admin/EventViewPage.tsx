@@ -1,28 +1,30 @@
+import { AddCircleOutline, DeleteOutline, EditOutlined, EuroOutlined, PersonOutline } from '@mui/icons-material';
 import { Box, Button, Dialog, DialogContent, DialogTitle, Grid, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import { AuthPage } from './AuthPage';
-import { useStores } from '../../stores';
-import { useParams } from 'react-router-dom';
+import { GridColDef, GridSelectionModel } from '@mui/x-data-grid';
+import { format } from 'date-fns';
+import { BreedCode } from 'koekalenteri-shared/model';
+import { toJS } from 'mobx';
+import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 import { CollapsibleSection, LinkButton, RegistrationForm, StyledDataGrid } from '../../components';
 import { ADMIN_EVENTS } from '../../config';
-import { getRegistrations, putRegistration } from '../../api/event';
-import { BreedCode, ConfirmedEventEx, Registration } from 'koekalenteri-shared/model';
-import { GridColDef, GridSelectionModel } from '@mui/x-data-grid';
-import { AddCircleOutline, DeleteOutline, EditOutlined, EuroOutlined, PersonOutline } from '@mui/icons-material';
-import { format } from 'date-fns';
 import { FullPageFlex } from '../../layout';
+import { useStores } from '../../stores';
+import { CAdminEvent } from '../../stores/classes/CAdminEvent';
+import { CRegistration } from '../../stores/classes/CRegistration';
+import { AuthPage } from './AuthPage';
 
 
-export function EventViewPage() {
+export const EventViewPage = observer(function EventViewPage() {
   const params = useParams();
   const { t } = useTranslation();
   const { t: breed } = useTranslation('breed');
-  const { privateStore } = useStores();
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const { rootStore } = useStores();
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<Registration>();
+  const [selected, setSelected] = useState<CRegistration>();
 
   useEffect(() => {
     if (!loading) {
@@ -30,12 +32,15 @@ export function EventViewPage() {
     }
     const abort = new AbortController();
     async function get(id: string) {
-      const loadedEvent = await privateStore.get(id, abort.signal);
-      if (privateStore.selectedEvent?.id !== loadedEvent?.id) {
-        privateStore.setSelectedEvent(loadedEvent);
+      if (!rootStore.adminEventStore.loaded) {
+        await rootStore.adminEventStore.load();
       }
-      const items = await getRegistrations(id, abort.signal);
-      setRegistrations(items);
+      const loadedEvent = rootStore.adminEventStore.find(id);
+      if (rootStore.adminEventStore.selectedEvent?.id !== loadedEvent?.id) {
+        rootStore.adminEventStore.selectedEvent = loadedEvent;
+      }
+      //const items = await getRegistrations(id, abort.signal);
+      //setRegistrations(items);
       setLoading(false);
     }
     if (params.id) {
@@ -44,9 +49,12 @@ export function EventViewPage() {
       setLoading(false);
     }
     return () => abort.abort();
-  }, [params, privateStore, loading]);
+  }, [params, rootStore, loading]);
 
-  const event = (privateStore.selectedEvent || {}) as ConfirmedEventEx;
+  const event = rootStore.adminEventStore.selectedEvent;
+  if (!event) {
+    return <div>No event selected</div>
+  }
 
   const columns: GridColDef[] = [
     {
@@ -102,30 +110,6 @@ export function EventViewPage() {
     }
   ];
 
-  const onSave = async (registration: Registration) => {
-    try {
-      const saved = await putRegistration(registration);
-      const old = registrations.find(r => r.id === saved.id);
-      if (old) {
-        Object.assign(old, saved);
-        setSelected(saved);
-      } else {
-        setRegistrations(registrations.concat([saved]));
-        event.entries++;
-      }
-      // TODO: update event calsses (infopanel)
-      setOpen(false);
-      return true;
-    } catch (e: any) {
-      console.error(e);
-      return false;
-    }
-  }
-  const onCancel = async () => {
-    setOpen(false);
-    return true;
-  }
-
   return (
     <AuthPage>
       <FullPageFlex>
@@ -134,9 +118,9 @@ export function EventViewPage() {
             <LinkButton sx={{ mb: 1 }} to={ADMIN_EVENTS} text={t('goBack')} />
             <Title event={event} />
             <CollapsibleSection title="Kokeen tiedot" initOpen={false}>
-                Kokeen tarkat tiedot tähän...
+              Kokeen tarkat tiedot tähän...
             </CollapsibleSection>
-              Filttereitä tähän...
+            Filttereitä tähän...
           </Grid>
           <Grid item xs="auto">
             <InfoPanel event={event} />
@@ -153,39 +137,56 @@ export function EventViewPage() {
           columns={columns}
           density='compact'
           disableColumnMenu
-          rows={registrations}
-          onSelectionModelChange={(selectionModel: GridSelectionModel) => setSelected(registrations.find(r => r.id === selectionModel[0]))}
+          rows={toJS(event.registrations)}
+          onSelectionModelChange={(selectionModel: GridSelectionModel) => setSelected(event.registrations.find(r => r.id === selectionModel[0]))}
           selectionModel={selected ? [selected.id] : []}
           onRowDoubleClick={() => setOpen(true)}
         />
       </FullPageFlex>
-      <Dialog
-        fullWidth
-        maxWidth='lg'
-        open={open}
-        onClose={() => setOpen(false)}
-        aria-labelledby="reg-dialog-title"
-        PaperProps={{
-          sx: {
-            m: 1,
-            maxHeight: 'calc(100% - 16px)',
-            width: 'calc(100% - 16px)',
-            '& .MuiDialogTitle-root': {
-              fontSize: '1rem'
-            }
-          }
-        }}
-      >
-        <DialogTitle id="reg-dialog-title">{selected ? `${selected.dog.name} / ${selected.handler.name}` : t('create')}</DialogTitle>
-        <DialogContent dividers sx={{height: '100%', p: 0 }}>
-          <RegistrationForm event={event} registration={selected} onSave={onSave} onCancel={onCancel} />
-        </DialogContent>
-      </Dialog>
+      <RegistrationDialog event={event} registration={selected} open={open} onClose={() => setOpen(false)} />
     </AuthPage>
   )
-}
+});
 
-function Title({ event }: { event: ConfirmedEventEx }) {
+const RegistrationDialog = observer(function RegistrationDialog({ event, registration, open, onClose }: { event: CAdminEvent, registration?: CRegistration, open: boolean, onClose: () => void }) {
+  const { t } = useTranslation();
+  const onSave = async (registration: CRegistration) => {
+    return false;
+  }
+  const onCancel = async (registration: CRegistration) => {
+    onClose();
+    return true;
+  }
+  if (!registration) {
+    return <></>
+  }
+  return (
+    <Dialog
+      fullWidth
+      maxWidth='lg'
+      open={open}
+      onClose={onClose}
+      aria-labelledby="reg-dialog-title"
+      PaperProps={{
+        sx: {
+          m: 1,
+          maxHeight: 'calc(100% - 16px)',
+          width: 'calc(100% - 16px)',
+          '& .MuiDialogTitle-root': {
+            fontSize: '1rem'
+          }
+        }
+      }}
+    >
+      <DialogTitle id="reg-dialog-title">{registration.dog ? `${registration.dog.name} / ${registration.handler.name}` : t('create')}</DialogTitle>
+      <DialogContent dividers sx={{ height: '100%', p: 0 }}>
+        <RegistrationForm event={event} registration={registration} onSave={onSave} onCancel={onCancel} />
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+const Title = observer(function Title({ event }: { event: CAdminEvent }) {
   const { t } = useTranslation();
   return (
     <Typography variant="h5">
@@ -193,9 +194,9 @@ function Title({ event }: { event: ConfirmedEventEx }) {
       <Box sx={{ display: 'inline-block', mx: 2, color: '#018786' }}>{t('event.states.confirmed_entryOpen')}</Box>
     </Typography>
   );
-}
+})
 
-function InfoPanel({ event }: { event: ConfirmedEventEx }) {
+const InfoPanel = observer(function InfoPanel({ event }: { event: CAdminEvent }) {
   const { t } = useTranslation();
   return (
     <TableContainer component={Paper} elevation={4} sx={{
@@ -224,4 +225,4 @@ function InfoPanel({ event }: { event: ConfirmedEventEx }) {
       </Table>
     </TableContainer>
   );
-}
+})

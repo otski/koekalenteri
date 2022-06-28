@@ -1,37 +1,31 @@
 import { Grid, TextField } from '@mui/material';
-import { add, differenceInDays, eachDayOfInterval, isAfter, isSameDay, startOfDay } from 'date-fns';
-import { Event, EventClass, Official, Organizer } from 'koekalenteri-shared/model';
+import { AdminEvent } from 'koekalenteri-shared/model';
 import { observer } from 'mobx-react-lite';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PartialEvent } from '.';
 import { CollapsibleSection, DateRange, HelpPopover } from '../..';
+import { useStores } from '../../../stores';
+import { CAdminEvent, CEventClass } from '../../../stores/classes';
 import { EventClasses } from './EventClasses';
 import { EventProperty } from './EventProperty';
 import { FieldRequirements } from './validation';
 
 type BasicInfoSectionParams = {
-  event: PartialEvent
-  errorStates: { [Property in keyof Event]?: boolean }
-  helperTexts: { [Property in keyof Event]?: string }
+  event: CAdminEvent
+  errorStates: { [Property in keyof AdminEvent]?: boolean }
+  helperTexts: { [Property in keyof AdminEvent]?: string }
   fields: FieldRequirements
   eventTypes: string[]
-  eventTypeClasses: Record<string, string[]>
-  officials: Official[]
-  organizers: Organizer[]
-  onChange: (props: Partial<Event>) => void
+  onChange: (props: Partial<AdminEvent>) => void
   open?: boolean
   onOpenChange?: (value: boolean) => void
 };
 
 
-export const BasicInfoSection = observer(function BasicInfoSection({ event, errorStates, helperTexts, fields, eventTypes, eventTypeClasses, officials, open, onOpenChange, organizers, onChange }: BasicInfoSectionParams) {
+export const BasicInfoSection = observer(function BasicInfoSection({ event, errorStates, helperTexts, fields, eventTypes, open, onOpenChange, onChange }: BasicInfoSectionParams) {
   const { t } = useTranslation();
+  const { rootStore } = useStores();
   const [helpAnchorEl, setHelpAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const typeOptions = eventClassOptions(event, eventTypeClasses[event.eventType || ''] || []);
-  const availableOfficials = useMemo(() => {
-    return officials.filter(o => !event.eventType || o.eventTypes?.includes(event.eventType));
-  }, [event, officials]);
 
   return (
     <CollapsibleSection title="Kokeen perustiedot" open={open} onOpenChange={onOpenChange}>
@@ -45,19 +39,9 @@ export const BasicInfoSection = observer(function BasicInfoSection({ event, erro
               end={event.endDate}
               required
               onChange={(start, end) => {
-                start = start || event.startDate;
-                end = end || event.endDate;
-                if (!isSameDay(start, event.startDate) && isSameDay(end, event.endDate)) {
-                  // startDate changed and endDate remained the same => change endDate based on the previous distance between days
-                  end = add(start, { days: differenceInDays(event.endDate, event.startDate) });
-                }
-                onChange({
-                  startDate: start,
-                  endDate: end,
-                  classes: updateClassDates(event, start, end)
-                })
-              }
-              }
+                event.setDates(start || undefined, end || undefined);
+                onChange({});
+              }}
             />
           </Grid>
           <Grid item sx={{ width: 300 }}>
@@ -75,7 +59,16 @@ export const BasicInfoSection = observer(function BasicInfoSection({ event, erro
         </Grid>
         <Grid item container spacing={1}>
           <Grid item sx={{ width: 300 }}>
-            <EventProperty id="eventType" event={event} fields={fields} options={eventTypes} onChange={onChange} />
+            <EventProperty
+              id="eventType"
+              event={event}
+              fields={fields}
+              options={eventTypes}
+              onChange={(props) => {
+                event.setType(props.eventType || '');
+                onChange({});
+              }}
+            />
           </Grid>
           <Grid item sx={{ width: 600 }}>
             <EventClasses
@@ -85,10 +78,13 @@ export const BasicInfoSection = observer(function BasicInfoSection({ event, erro
               errorStates={errorStates}
               helperTexts={helperTexts}
               requiredState={fields.state.classes}
-              value={event.classes}
-              classes={typeOptions}
+              value={event.classes.map(c => ({ class: c.class, date: c.date, judge: c.judge?.toJSON() }))}
+              classes={event.avalableClasses}
               label={t("event.classes")}
-              onChange={(e, values) => onChange({ classes: values })}
+              onChange={(e, values) => {
+                event.classes = values.map(v => new CEventClass({ date: v.date?.toISOString(), class: v.class }, rootStore.judgeStore));
+                onChange({});
+              }}
             />
           </Grid>
         </Grid>
@@ -105,8 +101,10 @@ export const BasicInfoSection = observer(function BasicInfoSection({ event, erro
               getOptionLabel={o => typeof o === 'string' ? o : o?.name || ''}
               id="organizer"
               isOptionEqualToValue={(o, v) => o?.id === v?.id}
-              onChange={onChange}
-              options={organizers}
+              onChange={({ organizer }) => {
+                onChange({ organizer: rootStore.organizerStore.getOrganizer(organizer?.id) });
+              }}
+              options={rootStore.organizerStore.organizers.map(o => ({id: o.id, name: o.name}))}
             />
           </Grid>
           <Grid item sx={{ width: 300 }}>
@@ -128,8 +126,10 @@ export const BasicInfoSection = observer(function BasicInfoSection({ event, erro
               getOptionLabel={o => typeof o === 'string' ? o : o?.name || ''}
               id="official"
               isOptionEqualToValue={(o, v) => o?.id === v?.id}
-              onChange={onChange}
-              options={availableOfficials}
+              onChange={({ official }) => {
+                onChange({ official: rootStore.officialStore.getOfficial(official?.id) })
+              }}
+              options={rootStore.officialStore.filterByEventType(event.eventType).map(o => o.toJSON())}
             />
           </Grid>
           <Grid item sx={{ width: 450 }}>
@@ -139,8 +139,10 @@ export const BasicInfoSection = observer(function BasicInfoSection({ event, erro
               getOptionLabel={o => typeof o === 'string' ? o : o?.name || ''}
               id="secretary"
               isOptionEqualToValue={(o, v) => o?.id === v?.id}
-              onChange={onChange}
-              options={officials}
+              onChange={({ secretary }) => {
+                onChange({ secretary: rootStore.officialStore.getOfficial(secretary?.id) })
+              }}
+              options={rootStore.officialStore.officials.map(o => o.toJSON())}
             />
           </Grid>
         </Grid>
@@ -148,29 +150,3 @@ export const BasicInfoSection = observer(function BasicInfoSection({ event, erro
     </CollapsibleSection>
   );
 });
-
-function eventClassOptions(event: PartialEvent, typeClasses: string[]) {
-  const days = eachDayOfInterval({
-    start: event.startDate,
-    end: event.endDate
-  });
-  const result: EventClass[] = [];
-  for (const day of days) {
-    result.push(...typeClasses.map(c => ({
-      class: c,
-      date: day,
-    })));
-  }
-  return result;
-}
-
-function updateClassDates(event: PartialEvent, start: Date, end: Date) {
-  const result: EventClass[] = [];
-  for (const c of event.classes) {
-    c.date = startOfDay(add(start, { days: differenceInDays(c.date || event.startDate, event.startDate) }));
-    if (!isAfter(c.date, end)) {
-      result.push(c);
-    }
-  }
-  return result;
-}

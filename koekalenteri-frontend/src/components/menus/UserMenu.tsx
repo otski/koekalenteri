@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { ExpandMore, PersonOutline } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { AppBarButton } from '..';

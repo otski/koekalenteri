@@ -1,6 +1,7 @@
 import { Checkbox, FormControlLabel, FormHelperText, Grid } from '@mui/material';
 import { sub } from 'date-fns';
-import { Event } from 'koekalenteri-shared/model';
+import { AdminEvent } from 'koekalenteri-shared/model';
+import { observer } from 'mobx-react-lite';
 import { CollapsibleSection, DateRange, PartialEvent } from '../..';
 import { EventFormPlaces } from './EventFormPlaces';
 import { FieldRequirements } from './validation';
@@ -8,14 +9,14 @@ import { FieldRequirements } from './validation';
 export type EntrySectionProps = {
   event: PartialEvent
   fields: FieldRequirements
-  errorStates: { [Property in keyof Event]?: boolean }
-  helperTexts: { [Property in keyof Event]?: string }
-  onChange: (props: Partial<Event>) => void
+  errorStates: { [Property in keyof AdminEvent]?: boolean }
+  helperTexts: { [Property in keyof AdminEvent]?: string }
+  onChange: (props: Partial<AdminEvent>) => void
   onOpenChange?: (value: boolean) => void
   open?: boolean
 }
 
-export function EntrySection(props: EntrySectionProps) {
+export const EntrySection = observer(function EntrySection(props: EntrySectionProps) {
   const { event, fields, helperTexts, onChange, onOpenChange, open } = props;
   return (
     <CollapsibleSection title="Ilmoittautuminen" open={open} onOpenChange={onOpenChange}>
@@ -29,7 +30,7 @@ export function EntrySection(props: EntrySectionProps) {
               defaultStart={sub(event.startDate, {weeks: 6})}
               end={event.entryEndDate || null}
               defaultEnd={sub(event.startDate, { weeks: 3 })}
-              range={{start: event.createdAt || sub(event.startDate, {weeks: 9}), end: event.startDate}}
+              range={{ start: event.createdAt || sub(event.startDate, { weeks: 9 }), end: sub(event.startDate, { days: 1 })}}
               required={fields.required.entryStartDate || fields.required.entryEndDate}
               onChange={(start, end) => onChange({entryStartDate: start || undefined, entryEndDate: end || undefined})}
             />
@@ -67,4 +68,4 @@ export function EntrySection(props: EntrySectionProps) {
       </Grid>
     </CollapsibleSection>
   );
-}
+})

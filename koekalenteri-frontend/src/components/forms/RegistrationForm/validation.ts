@@ -1,7 +1,7 @@
 import { differenceInMonths, startOfYear } from 'date-fns';
-import { BreedCode, ConfirmedEventEx, Dog, Person, QualifyingResult, Registration, RegistrationBreeder, TestResult } from 'koekalenteri-shared/model';
+import { BreedCode, Dog, Event, Person, QualifyingResult, Registration, RegistrationBreeder, TestResult } from 'koekalenteri-shared/model';
 import { ValidationResult, Validators2, WideValidationResult } from '../validation';
-import { EventRequirement, EventResultRequirement, EventResultRequirements, EventResultRequirementsByDate, getRequirements, RegistrationClass, REQUIREMENTS } from './rules';
+import { EventRequirement, EventResultRequirement, EventResultRequirements, EventResultRequirementsByDate, getRequirements, RegistrationClass, REQUIREMENTS } from '../../../rules';
 
 function validateBreeder(breeder: RegistrationBreeder | undefined) {
   return !breeder || !breeder.name || !breeder.location;
@@ -11,7 +11,7 @@ function validatePerson(person: Person | undefined) {
   return !person || !person.email || !person.name || !person.location || !person.phone;
 }
 
-const VALIDATORS: Validators2<Registration, 'registration', ConfirmedEventEx> = {
+const VALIDATORS: Validators2<Registration, 'registration', Event> = {
   agreeToPublish: (reg) => !reg.agreeToPublish ? 'publish' : false,
   agreeToTerms: (reg) => !reg.agreeToTerms ? 'terms' : false,
   breeder: (reg) => validateBreeder(reg.breeder) ? 'required' : false,
@@ -26,7 +26,7 @@ const VALIDATORS: Validators2<Registration, 'registration', ConfirmedEventEx> = 
   results: () => false
 };
 
-export function validateRegistrationField(registration: Registration, field: keyof Registration, event: ConfirmedEventEx): ValidationResult<Registration, 'registration'> {
+export function validateRegistrationField(registration: Registration, field: keyof Registration, event: Event): ValidationResult<Registration, 'registration'> {
   const validator = VALIDATORS[field] || ((value) => typeof value[field] === 'undefined' || value[field] === '');
   const result = validator(registration, true, event);
   if (!result) {
@@ -47,19 +47,21 @@ export function validateRegistrationField(registration: Registration, field: key
   return result;
 }
 
-const NOT_VALIDATED = ['createdAt', 'createdBy', 'modifiedAt', 'modifiedBy', 'deletedAt', 'deletedBy'];
+const NOT_VALIDATED = ['eventId', 'store', 'createdAt', 'createdBy', 'modifiedAt', 'modifiedBy', 'deletedAt', 'deletedBy'];
 
-export function validateRegistration(registration: Registration, event: ConfirmedEventEx) {
+export function validateRegistration(registration: Registration, event: Event) {
   const errors = [];
   let field: keyof Registration;
-  for (field in registration) {
-    if (NOT_VALIDATED.includes(field)) {
+  const names = Object.getOwnPropertyNames(registration) as Array<keyof Registration>;
+  for (field of names) {
+    if (NOT_VALIDATED.includes(field) || field.startsWith('_')) {
       continue;
     }
     const result = validateRegistrationField(registration, field, event);
     if (result) {
-      console.log({ field, result });
+      // console.log({ field, result });
       errors.push(result);
+    } else {
     }
   }
   return errors;
@@ -79,11 +81,11 @@ const excludeByYear = (result: Partial<TestResult>, date: Date) => result.date &
 
 export function validateDog(
   event: { eventType: string, startDate: Date },
-  reg: { class?: string, dog: Dog, results?: Partial<TestResult>[] }
+  reg: { class?: string, dog?: Dog, results?: Partial<TestResult>[] }
 ): WideValidationResult<Registration, 'registration'>
 {
   const dog = reg.dog;
-  if (!dog.regNo || !dog.name || !dog.rfid) {
+  if (!dog || !dog.regNo || !dog.name || !dog.rfid) {
     return 'required';
   }
   const breedCode = validateDogBreed(event, dog);

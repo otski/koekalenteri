@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { AppBar, Typography, IconButton, Toolbar, Link, Box } from '@mui/material';
 import logo from '../assets/snj-logo.png';
 import banner from '../assets/banner.png';

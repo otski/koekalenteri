@@ -42,37 +42,35 @@ function renderPath(path: string) {
   );
 }
 
-it('renders logo with proper ALT', () => {
+it('renders home page', () => {
   renderPath('/');
   const imgElement = screen.getByAltText('Suomen noutajakoirajärjestö');
   expect(imgElement).toBeInTheDocument();
 }, TIMEOUT);
 
-it('renders event page', async () => {
+it('renders event registration page', async () => {
   renderPath('/event/NOME-B/test2');
   const spinner = screen.getByRole('progressbar');
   expect(spinner).toBeInTheDocument();
-  const organizer = await screen.findByText(/Test org/);
+  const organizer = await screen.findByText(/Järjestäjä 2/);
   expect(organizer).toBeInTheDocument();
   expect(spinner).not.toBeInTheDocument();
 }, TIMEOUT);
 
-it('renders event page with date selected', async () => {
-  renderPath('/event/NOME-B/test2/13.02.');
+it('renders event registration page with class and date selected', async () => {
+  renderPath('/event/NOME-B/test2/AVO/13.02.');
+  const c = await screen.findByText(/AVO, la \(aamu\) \/ la \(ilta\)/);
+  expect(c).toBeInTheDocument();
+}, TIMEOUT);
+
+fit('renders admin default (event) page', async () => {
+  renderPath(ADMIN_ROOT);
   const spinner = screen.getByRole('progressbar');
   expect(spinner).toBeInTheDocument();
-  const organizer = await screen.findByText(/Test org/);
-  expect(organizer).toBeInTheDocument();
+  await screen.findByText('type1');
   expect(spinner).not.toBeInTheDocument();
-}, TIMEOUT);
-
-it('renders admin default (event) page', async () => {
-  renderPath(ADMIN_ROOT);
-  const head = await screen.findAllByText(/Tapahtumat/);
-  expect(head.length).toBe(2);
-
-  // Select an event, and click edit button
   const row = screen.getAllByRole('row')[1];
+  expect(row).toMatchSnapshot();
   const cell = within(row).getAllByRole('cell')[0];
   fireEvent.click(cell, 'click');
   expect(row).toHaveClass('Mui-selected');
@@ -89,11 +87,9 @@ it('renders admin createEvent page', async () => {
 
 it('renders admin EventViewPage', async () => {
   renderPath(`${ADMIN_VIEW_EVENT}/test1`);
-  const spinner = screen.getByRole('progressbar');
-  expect(spinner).toBeInTheDocument();
-  const head = await screen.findByText(/type1, 10.-11.2.2021, test location/i);
+  const head = await screen.findByText(/type1, 10.-11.2.2021, test location/i, undefined, { timeout: TIMEOUT });
   expect(head).toBeInTheDocument();
-})
+}, TIMEOUT);
 
 it('renders admin organizations', async () => {
   renderPath(ADMIN_ORGS);

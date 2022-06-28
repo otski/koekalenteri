@@ -15,12 +15,13 @@ export class COfficial {
   store: OfficialStore;
 
   constructor(store: OfficialStore, id: number) {
+    this.id = id;
+    this.store = store;
+
     makeAutoObservable(this, {
       id: false,
       store: false,
     });
-    this.id = id;
-    this.store = store;
   }
 
   updateFromJson(json: Official) {

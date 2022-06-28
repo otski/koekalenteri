@@ -2,7 +2,7 @@ import { Official } from "koekalenteri-shared/model";
 import { makeAutoObservable, runInAction } from "mobx";
 import { getOfficials } from "../api/official";
 import { COfficial } from "./classes/COfficial";
-import { RootStore } from "./RootStore";
+import type { RootStore } from "./RootStore";
 
 export class OfficialStore {
   rootStore
@@ -10,15 +10,24 @@ export class OfficialStore {
   loading = false
 
   constructor(rootStore: RootStore) {
+    this.rootStore = rootStore;
+
     makeAutoObservable(this, {
       rootStore: false
     })
-    this.rootStore = rootStore;
   }
 
   async load(refresh?: boolean, signal?: AbortSignal) {
     if (this.loading) {
-      return;
+      const instance = this;
+      return new Promise(function(resolve, reject) {
+        (function waitForLoad() {
+          if (!instance.loading) {
+            return resolve(true);
+          }
+          setTimeout(waitForLoad, 50);
+        })();
+      });
     }
     runInAction(() => {
       this.loading = true;
@@ -29,6 +38,10 @@ export class OfficialStore {
       this.officials.sort((a, b) => a.name.localeCompare(b.name))
       this.loading = false;
     });
+  }
+
+  getOfficial(id?: number): COfficial | undefined {
+    return this.officials.find(item => item.id === id);
   }
 
   getOfficials(ids?: number[]): COfficial[] {
@@ -45,6 +58,10 @@ export class OfficialStore {
     return result;
   }
 
+  filterByEventType(eventType?: string) {
+    return this.officials.filter(o => !eventType || o.eventTypes?.includes(eventType));
+  }
+
   updateOfficial(json: Official) {
     let official = this.officials.find(o => o.id === json.id);
     if (!official) {
@@ -53,6 +70,8 @@ export class OfficialStore {
     }
     official.updateFromJson(json)
   }
+
+  toJSON() { return {} }
 }
 
 

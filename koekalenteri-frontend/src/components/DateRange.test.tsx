@@ -1,13 +1,13 @@
 import fi from 'date-fns/locale/fi';
-import AdapterDateFns from '@mui/lab/AdapterDateFns';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { DateRange, DateRangeProps } from '.';
 import { parseISO, startOfMonth } from 'date-fns';
 
 const renderComponent = (props: DateRangeProps) => {
   render(
-    <LocalizationProvider dateAdapter={AdapterDateFns} locale={fi}>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fi}>
       <DateRange {...props} />
     </LocalizationProvider>
   );

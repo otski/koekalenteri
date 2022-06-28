@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { Menu, MenuItem } from '@mui/material';
 import { Language as LanguageIcon, ExpandMore } from '@mui/icons-material';
 import { Language, locales } from '../../i18n';

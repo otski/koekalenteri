@@ -2,7 +2,7 @@ import { Organizer } from "koekalenteri-shared/model";
 import { makeAutoObservable, runInAction } from "mobx";
 import { getOrganizers } from "../api/organizer";
 import { COrganizer } from "./classes/COrganizer";
-import { RootStore } from "./RootStore";
+import type { RootStore } from "./RootStore";
 
 export class OrganizerStore {
   rootStore
@@ -10,15 +10,24 @@ export class OrganizerStore {
   loading = false
 
   constructor(rootStore: RootStore) {
+    this.rootStore = rootStore;
+
     makeAutoObservable(this, {
       rootStore: false
     })
-    this.rootStore = rootStore;
   }
 
   async load(refresh?: boolean, signal?: AbortSignal) {
     if (this.loading) {
-      return;
+      const instance = this;
+      return new Promise(function(resolve, reject) {
+        (function waitForLoad() {
+          if (!instance.loading) {
+            return resolve(true);
+          }
+          setTimeout(waitForLoad, 50);
+        })();
+      });
     }
     runInAction(() => {
       this.loading = true;
@@ -30,6 +39,10 @@ export class OrganizerStore {
     });
   }
 
+  getOrganizer(id?: number): COrganizer | undefined {
+    return this.organizers.find(item => item.id === id);
+  }
+
   updateOrganizer(json: Organizer) {
     let organizer = this.organizers.find(o => o.id === json.id);
     if (!organizer) {
@@ -38,6 +51,8 @@ export class OrganizerStore {
     }
     organizer.updateFromJson(json)
   }
+
+  toJSON() { return {} }
 }
 
 

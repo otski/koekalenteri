@@ -3,18 +3,20 @@ import { Judge } from "koekalenteri-shared/model";
 import { makeAutoObservable, runInAction } from "mobx";
 import { getJudges, putJudge } from "../api/judge";
 import { CJudge } from "./classes/CJudge";
-import { RootStore } from "./RootStore";
+import type { RootStore } from "./RootStore";
 
 export class JudgeStore {
   rootStore
   judges: Array<CJudge> = []
   loading = false
+  loaded = false
 
   constructor(rootStore: RootStore) {
+    this.rootStore = rootStore;
+
     makeAutoObservable(this, {
       rootStore: false
     })
-    this.rootStore = rootStore;
   }
 
   get activeJudges() {
@@ -23,7 +25,15 @@ export class JudgeStore {
 
   async load(refresh?: boolean, signal?: AbortSignal) {
     if (this.loading) {
-      return;
+      const instance = this;
+      return new Promise(function(resolve, reject) {
+        (function waitForLoad() {
+          if (instance.loaded) {
+            return resolve(true);
+          }
+          setTimeout(waitForLoad, 50);
+        })();
+      });
     }
     runInAction(() => {
       this.loading = true;
@@ -33,22 +43,33 @@ export class JudgeStore {
       data.forEach(json => this.updateJudge(json));
       this.judges.sort((a, b) => a.name.localeCompare(b.name, i18next.language));
       this.loading = false;
+      this.loaded = true;
     });
   }
 
-  getJudge(id: number): CJudge | undefined {
+  getJudge(id?: number): CJudge | undefined {
     return this.judges.find(item => item.id === id);
   }
 
-  getJudges(ids?: number[]): CJudge[] {
+  getJudges(judges: Judge[] | number[]): CJudge[] {
     const result: CJudge[] = [];
-    if (!ids || ids.length === 0) {
+    if (!judges || judges.length === 0) {
       return result;
     }
-    for (const id of ids) {
-      const judge = this.judges.find(item => item.id === id);
-      if (judge) {
-        result.push(judge);
+    for (const judge of judges) {
+      const id = typeof judge === 'number' ? judge : judge.id;
+      if (!id) {
+        continue;
+      }
+      const instance = this.judges.find(item => item.id === id);
+      if (instance) {
+        result.push(instance);
+      } else {
+        const temp = new CJudge(this, id);
+        if (typeof judge !== 'number') {
+          temp.updateFromJson(judge);
+        }
+        result.push(temp);
       }
     }
     return result;
@@ -78,6 +99,8 @@ export class JudgeStore {
     }
     judge.updateFromJson(json)
   }
+
+  toJSON() { return {} }
 }
 
 

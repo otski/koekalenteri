@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { Box } from "@mui/material";
 import { ReactNode } from "react";
 

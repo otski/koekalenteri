@@ -1,9 +1,9 @@
 import fi from 'date-fns/locale/fi';
-import AdapterDateFns from '@mui/lab/AdapterDateFns';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { fireEvent, render, within, screen } from '@testing-library/react';
 import { EventFilter } from './';
-import { FilterProps } from '../stores/PublicStore';
+import { FilterProps } from '../stores/EventStore';
 import { Judge, Organizer } from 'koekalenteri-shared/model';
 
 const judges: Judge[] = [
@@ -43,7 +43,7 @@ const organizers: Organizer[] = [
 const eventTypes = ['NOU', 'NOME-B', 'NOME-A', 'NOWT', 'NKM'];
 
 const renderComponent = (filter: FilterProps, onChange?: ((filter: FilterProps) => void)) => render(
-  <LocalizationProvider dateAdapter={AdapterDateFns} locale={fi}>
+  <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fi}>
     <EventFilter judges={judges} organizers={organizers} filter={filter} eventTypes={eventTypes} onChange={onChange}></EventFilter>
   </LocalizationProvider>
 );

@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useLocalStorage, useSessionStorage } from ".";
 
@@ -54,7 +55,7 @@ function createStorageEvent(key: string, newValue: string | null, storage: Stora
     it('initializes default value', () => {
       render(<Component />);
       expect(screen.getByTestId('data')).toHaveTextContent(name + ' Default');
-      expect(storage.getItem('test')).toEqual(name + ' Default');
+      expect(storage.getItem('test')).toEqual(null);  // the default value is not committed
     });
 
     it('reads previously set value', () => {
@@ -83,14 +84,14 @@ function createStorageEvent(key: string, newValue: string | null, storage: Stora
       render(<Component />);
       fireEvent(window, createStorageEvent("test1", "Test Sync", storage));
       expect(screen.getByTestId('data')).toHaveTextContent(name + ' Default');
-      expect(storage.getItem('test')).toEqual(name + ' Default');
+      expect(storage.getItem('test')).toEqual(null);
     });
 
     it('does not sync from different storage', () => {
       render(<Component />);
       fireEvent(window, createStorageEvent("test", "Test Sync", otherStorage));
       expect(screen.getByTestId('data')).toHaveTextContent(name + ' Default');
-      expect(storage.getItem('test')).toEqual(name + ' Default');
+      expect(storage.getItem('test')).toEqual(null);
     });
   });
 });

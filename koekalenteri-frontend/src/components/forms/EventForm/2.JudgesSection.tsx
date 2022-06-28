@@ -1,34 +1,33 @@
 import { AddOutlined, DeleteOutline } from '@mui/icons-material';
 import { Button, FormHelperText, Grid } from '@mui/material';
 import { isSameDay } from 'date-fns';
-import { Event, EventClass, Judge } from 'koekalenteri-shared/model';
+import { AdminEvent, EventClass, Judge } from 'koekalenteri-shared/model';
+import { computed } from 'mobx';
+import { Observer, observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
-import { CollapsibleSection, PartialEvent } from '../..';
+import { CollapsibleSection } from '../..';
+import { useStores } from '../../../stores';
+import { CAdminEvent } from '../../../stores/classes';
 import { AutocompleteSingle } from '../../AutocompleteSingle';
 import { EventClasses } from './EventClasses';
 import { FieldRequirements, validateEventField } from './validation';
 
-function filterJudges(judges: Judge[], eventJudges: number[], id: number) {
-  return judges.filter(j => j.id === id || !eventJudges.includes(j.id));
-}
-
 type JudgesSectionProps = {
-  event: PartialEvent
+  event: CAdminEvent
   fields?: FieldRequirements
-  judges: Judge[]
-  onChange: (props: Partial<Event>) => void
+  onChange: (props: Partial<AdminEvent>) => void
   onOpenChange?: (value: boolean) => void
   open?: boolean
 }
 
-export function JudgesSection({ event, judges, fields, onChange, onOpenChange, open }: JudgesSectionProps) {
+export const JudgesSection = observer(function JudgesSection({ event, fields, onChange, onOpenChange, open }: JudgesSectionProps) {
   const { t } = useTranslation();
-  const list = event.judges.length ? event.judges : [0];
-  const error = fields?.required.judges && validateEventField(event, 'judges', true);
+  const { rootStore } = useStores();
+  const error = fields?.required.judges && computed(() => validateEventField(event, 'judges', true)).get();
   const helperText = error ? t(`validation.event.${error.key}`, { ...error.opts, state: fields.state.judges || 'draft' }) : '';
 
   const updateJudge = (id: number | undefined, values: EventClass[]) => {
-    const judge = id ? { id, name: judges.find(j => j.id === id)?.name || '' } : undefined;
+    const judge = rootStore.judgeStore.getJudge(id);
     const isSelected = (c: EventClass) => values.find(v => isSameDay(v.date || event.startDate, c.date || event.startDate) && v.class === c.class);
     const wasSelected = (c: EventClass) => c.judge?.id === id;
     const previousOrUndefined = (c: EventClass) => wasSelected(c) ? undefined : c.judge;
@@ -41,51 +40,54 @@ export function JudgesSection({ event, judges, fields, onChange, onOpenChange, o
   return (
     <CollapsibleSection title={t('judges')} open={open} onOpenChange={onOpenChange}>
       <Grid item container spacing={1}>
-        {list.map((id, index) => {
+        {event.judges.map(j => j.toJSON()).map((judge, index) => {
           const title = index === 0 ? t('judgeChief') : t('judge') + ` ${index + 1}`;
           return (
-            <Grid key={id} item container spacing={1} alignItems="center">
-              <Grid item sx={{ width: 300 }}>
-                <AutocompleteSingle
-                  value={judges.find(j => j.id === id)}
-                  label={title}
-                  getOptionLabel={o => o?.name || ''}
-                  options={filterJudges(judges, event.judges, id)}
-                  onChange={(_e, value) => {
-                    const newId = value?.id;
-                    const newJudges = [...event.judges];
-                    const oldId = newJudges.splice(index, 1)[0]
-                    if (newId) {
-                      newJudges.splice(index, 0, newId);
+            <Observer key={judge.id}>{() => (
+              <Grid item container spacing={1} alignItems="center">
+                <Grid item sx={{ width: 300 }}>
+                  <AutocompleteSingle
+                    value={judge}
+                    label={title}
+                    getOptionLabel={o => o?.name || ''}
+                    isOptionEqualToValue={(o, v) => o.id === v.id}
+                    options={rootStore.judgeStore.activeJudges.filter(j => !event.judges.some(ej => ej.id === j.id)).map(j => j.toJSON())}
+                    onChange={(_e, value) => {
+                      event.setJudge(index, value?.id);
+                      onChange({});
+                    }}
+                  />
+                </Grid>
+                <Grid item sx={{ width: 300 }}>
+                  <EventClasses
+                    id={`class${index}`}
+                    event={event}
+                    value={event.classes
+                      .filter(c => c.judge && c.judge.id === judge.id)
+                      .map(c => ({ class: c.class, date: c.date }))
                     }
-                    onChange({
-                      judges: newJudges,
-                      classes: updateJudge(newId, event.classes.filter(c => c.judge && c.judge.id === oldId))
-                    })
-                  }}
-                />
+                    classes={event.classes.map(c => ({ class: c.class, date: c.date }))}
+                    label="Arvostelee koeluokat"
+                    onChange={(_e, values) => onChange({
+                      classes: updateJudge(judge.id, values)
+                    })}
+                  />
+                </Grid>
+                <Grid item>
+                  <Button startIcon={<DeleteOutline />} onClick={() => event.setJudge(index)}>Poista tuomari</Button>
+                </Grid>
               </Grid>
-              <Grid item sx={{ width: 300 }}>
-                <EventClasses
-                  id={`class${index}`}
-                  event={event}
-                  value={event.classes.filter(c => c.judge && c.judge.id === id)}
-                  classes={[...event.classes]}
-                  label="Arvostelee koeluokat"
-                  onChange={(_e, values) => onChange({
-                    classes: updateJudge(id, values)
-                  })}
-                />
-              </Grid>
-              <Grid item>
-                <Button startIcon={<DeleteOutline />} onClick={() => onChange({judges: event.judges.filter(j => j !== id), classes: event.classes.map(c => c.judge?.id === id ? {...c, judge: undefined} : c)})}>Poista tuomari</Button>
-              </Grid>
-            </Grid>
+            )}</Observer>
           );
         })}
-        <Grid item><Button startIcon={<AddOutlined />} onClick={() => onChange({ judges: [...event.judges].concat(0) })}>Lisää tuomari</Button></Grid>
+        <Grid item><Button startIcon={<AddOutlined />} onClick={() => {
+          const nextJudge = rootStore.judgeStore.activeJudges.filter(j => !event.judges.some(ej => ej.id === j.id))[0];
+          if (nextJudge) {
+            event.judges.push(nextJudge);
+          }
+        }}>Lisää tuomari</Button></Grid>
       </Grid>
       <FormHelperText error>{helperText}</FormHelperText>
     </CollapsibleSection>
   );
-}
+})

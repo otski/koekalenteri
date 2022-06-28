@@ -1,7 +1,8 @@
-import { Event } from "koekalenteri-shared/model";
+import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
+import { CEvent } from "../stores/classes";
 
-export function CostInfo({ event }: { event: Event }) {
+export const CostInfo = observer(function CostInfo({ event }: { event: CEvent }) {
   const { t } = useTranslation();
 
   return (
@@ -13,4 +14,4 @@ export function CostInfo({ event }: { event: Event }) {
       {event.paymentDetails}
     </>
   );
-}
+})

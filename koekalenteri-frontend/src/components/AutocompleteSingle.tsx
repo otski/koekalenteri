@@ -1,4 +1,6 @@
+/* eslint-disable mobx/missing-observer */
 import { Autocomplete, AutocompleteProps, TextField } from "@mui/material";
+import { withName } from "./hoc";
 
 type OmitProps =  'fullWidth' | 'freeSolo' | 'multiple' | 'renderInput';
 
@@ -10,9 +12,10 @@ export type AutocompleteSingleProps<T, DisableClearable extends boolean | undefi
 
 export function AutocompleteSingle<T, DisableClearable extends boolean | undefined>(props: AutocompleteSingleProps<T, DisableClearable>) {
   const { error, helperText, label, ...acProps } = props;
+  const NamedAutocomplete = withName(Autocomplete<T, false, DisableClearable, false>, label);
 
   return (
-    <Autocomplete
+    <NamedAutocomplete
       autoHighlight
       data-testid={label}
       {...acProps}

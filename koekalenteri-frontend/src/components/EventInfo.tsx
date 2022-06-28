@@ -1,11 +1,12 @@
 import { Table, TableBody, TableRow, TableCell } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { format } from 'date-fns';
-import type { EventEx, EventClass } from 'koekalenteri-shared/model';
+import type { EventClass } from 'koekalenteri-shared/model';
 import { useTranslation } from 'react-i18next';
 import { entryDateColor } from '../utils';
 import { CostInfo, LinkButton } from '.';
-import { useStores } from '../stores';
+import { CEvent } from '../stores/classes';
+import { observer } from 'mobx-react-lite';
 
 const useRowStyles = makeStyles({
   root: {
@@ -30,21 +31,18 @@ const useRowStyles = makeStyles({
   }
 });
 
-export function EventInfo({ event }: { event: EventEx }) {
-  const { rootStore } = useStores();
+export const EventInfo = observer(function EventInfo({ event }: { event: CEvent }) {
   const classes = useRowStyles();
   const { t } = useTranslation();
-  const judgeName = (id: number) => rootStore.judgeStore.getJudge(id)?.name || '';
-  const allJudgesInCalsses = event.judges.filter(j => !event.classes.find(c => c.judge?.id === j)).length === 0;
   return (
     <>
       <Table size="small" aria-label="details" className={classes.root}>
         <TableBody>
           <TableRow key={event.id + 'date'}>
             <TableCell component="th" scope="row">{t('entryTime')}:</TableCell>
-            <TableCell sx={{ color: entryDateColor(event) }}>
+            <TableCell sx={{ color: entryDateColor(event.isEntryOpen, event.isEntryClosing, !!event.entryOrigEndDate) }}>
               <b>{t('daterange', { start: event.entryStartDate, end: event.entryEndDate })}</b>
-              {event.isEntryOpen ? t('distanceLeft', { date: event.entryEndDate }) : ''}
+              {event.isEntryOpen ? (event.entryOrigEndDate ? 'jatkettu, ' : '') + t('distanceLeft', { date: event.entryEndDate }) : ''}
             </TableCell>
           </TableRow>
           <TableRow key={event.id + 'organizer'}>
@@ -55,15 +53,15 @@ export function EventInfo({ event }: { event: EventEx }) {
             <TableCell component="th" scope="row">{t('event.eventType')}:</TableCell>
             <TableCell>{event.eventType}</TableCell>
           </TableRow>
-          {event.classes.length ? <EventClassRow key={event.id + 'classes'} event={event} /> : ''}
-          {allJudgesInCalsses ? '' :
+          {event.classes.length ? <EventClassRow key={event.id + 'classes'} event={event} /> : <></>}
+          {event.allJudgesInClasses ? <></> :
             <>
               <TableRow key={event.id + 'judge' + event.judges[0]}>
                 <TableCell component="th" scope="row" rowSpan={event.judges.length}>{t('event.judges')}:</TableCell>
-                <TableCell>{judgeName(event.judges[0])}</TableCell>
+                <TableCell>{event.judges[0]?.name}</TableCell>
               </TableRow>
-              {event.judges.slice(1).map((judgeId) => (
-                <TableRow key={event.id + 'judge' + judgeId}><TableCell>{judgeName(judgeId)}</TableCell></TableRow>
+              {event.judges.slice(1).map((judge) => (
+                <TableRow key={event.id + 'judge' + judge.id}><TableCell>{judge.name}</TableCell></TableRow>
               ))}
             </>
           }
@@ -87,13 +85,13 @@ export function EventInfo({ event }: { event: EventEx }) {
       </Table>
     </>
   );
-}
+});
 
 type EventProps = {
-  event: EventEx
+  event: CEvent
 }
 
-function EventClassRow({ event }: EventProps) {
+const EventClassRow = observer(function EventClassRow({ event }: EventProps) {
   const { t } = useTranslation();
   return (
     <TableRow key={event.id + 'classes'}>
@@ -101,12 +99,12 @@ function EventClassRow({ event }: EventProps) {
       <TableCell><EventClassTable event={event} /></TableCell>
     </TableRow>
   );
-}
+})
 
 const eventClassKey = (eventId: string, eventClass: string | EventClass) =>
   eventId + 'class' + (typeof eventClass === 'string' ? eventClass : eventClass.date + eventClass.class);
 
-function EventClassTable({ event }: EventProps) {
+const EventClassTable = observer(function EventClassTable({ event }: EventProps) {
   const classes = useRowStyles();
   return (
     <Table size="small" className={classes.classes}>
@@ -116,11 +114,11 @@ function EventClassTable({ event }: EventProps) {
       </TableBody>
     </Table>
   );
-}
+})
 
-function EventClassTableRow({ event, eventClass }: { event: EventEx, eventClass: EventClass }) {
+const EventClassTableRow = observer(function EventClassTableRow({ event, eventClass }: { event: CEvent, eventClass: EventClass }) {
   const { t } = useTranslation();
-  const classDate = format(eventClass.date || event.startDate || new Date(), t('dateformatS'));
+  const classDate = format(eventClass.date || event.startDate, t('dateformatS'));
   const entryStatus = eventClass.places || eventClass.entries ? `${eventClass.entries || 0} / ${eventClass.places || '-'}` : '';
   const memberStatus = eventClass.members ? t('members', {count: eventClass.members}) : '';
   return (
@@ -136,4 +134,4 @@ function EventClassTableRow({ event, eventClass }: { event: EventEx, eventClass:
       <TableCell></TableCell>
     </TableRow>
   )
-}
+})

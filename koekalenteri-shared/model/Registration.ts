@@ -6,7 +6,7 @@ export type JsonRegistration = JsonDbRecord & {
   breeder: RegistrationBreeder
   class?: string
   dates: JsonRegistrationDate[]
-  dog: JsonDog
+  dog?: JsonDog
   eventId: string
   eventType: string
   handler: RegistrationPerson
@@ -23,9 +23,9 @@ export type Registration = DbRecord & {
   agreeToPublish: boolean
   agreeToTerms: boolean
   breeder: RegistrationBreeder
-  class?: string
+  class: string
   dates: RegistrationDate[]
-  dog: Dog
+  dog?: Dog
   eventId: string
   eventType: string
   handler: RegistrationPerson
@@ -38,7 +38,7 @@ export type Registration = DbRecord & {
   results?: Array<Partial<TestResult> & { id: string }>
 }
 
-export type JsonQualifyingResult = JsonTestResult & { official: boolean, qualifying?: boolean };
+export type JsonQualifyingResult = JsonTestResult & { official?: boolean, qualifying?: boolean };
 export type QualifyingResult = TestResult & { official: boolean, qualifying?: boolean };
 
 export type JsonRegistrationDate = {

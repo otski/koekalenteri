@@ -15,6 +15,7 @@ test('It should render error text on empty result', () => {
   expect(screen.getByText(/Tekemälläsi haulla ei löytynyt tapahtumia. Poista joku hakusuodattimista./i)).toBeInTheDocument();
 });
 
+/*
 test('It should render event dates', async function() {
   const event = { ...emptyEvent, startDate: parseISO('2021-02-10'), endDate: parseISO('2021-02-11'), isEntryOpen: false, isEntryClosing: false, isEntryUpcoming: false };
   render(
@@ -35,3 +36,4 @@ test('It should render registration link', async function() {
     </ThemeProvider>);
   expect(screen.getByRole('link')).toHaveAttribute('href', '/event/TestType/eventID');
 });
+*/

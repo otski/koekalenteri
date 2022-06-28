@@ -1,0 +1,140 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders admin default (event) page 1`] = `
+<div
+  aria-rowindex="2"
+  aria-selected="false"
+  class="MuiDataGrid-row"
+  data-id="test1"
+  data-rowindex="0"
+  role="row"
+  style="max-height: 36px; min-height: 36px;"
+>
+  <div
+    aria-colindex="1"
+    aria-colspan="1"
+    class="MuiDataGrid-cell MuiDataGrid-cell--textRight"
+    data-colindex="0"
+    data-field="date"
+    role="cell"
+    style="min-width: 120px; max-width: 120px; min-height: 36px; max-height: 36px;"
+    tabindex="-1"
+  >
+    <div
+      class="MuiDataGrid-cellContent"
+    >
+      10.-11.2.2021
+    </div>
+  </div>
+  <div
+    aria-colindex="2"
+    aria-colspan="1"
+    class="MuiDataGrid-cell MuiDataGrid-cell--textLeft"
+    data-colindex="1"
+    data-field="eventType"
+    role="cell"
+    style="min-width: 100px; max-width: 100px; min-height: 36px; max-height: 36px;"
+    tabindex="-1"
+  >
+    <div
+      class="MuiDataGrid-cellContent"
+    >
+      type1
+    </div>
+  </div>
+  <div
+    aria-colindex="3"
+    aria-colspan="1"
+    class="MuiDataGrid-cell MuiDataGrid-cell--textLeft"
+    data-colindex="2"
+    data-field="classes"
+    role="cell"
+    style="min-width: 0; max-width: 0; min-height: 36px; max-height: 36px;"
+    tabindex="-1"
+  >
+    <div
+      class="MuiDataGrid-cellContent"
+    >
+      class1
+    </div>
+  </div>
+  <div
+    aria-colindex="4"
+    aria-colspan="1"
+    class="MuiDataGrid-cell MuiDataGrid-cell--textLeft"
+    data-colindex="3"
+    data-field="location"
+    role="cell"
+    style="min-width: 0; max-width: 0; min-height: 36px; max-height: 36px;"
+    tabindex="-1"
+  >
+    <div
+      class="MuiDataGrid-cellContent"
+    >
+      test location
+    </div>
+  </div>
+  <div
+    aria-colindex="5"
+    aria-colspan="1"
+    class="MuiDataGrid-cell MuiDataGrid-cell--textLeft"
+    data-colindex="4"
+    data-field="official"
+    role="cell"
+    style="min-width: 0; max-width: 0; min-height: 36px; max-height: 36px;"
+    tabindex="-1"
+  >
+    <div
+      class="MuiDataGrid-cellContent"
+    />
+  </div>
+  <div
+    aria-colindex="6"
+    aria-colspan="1"
+    class="MuiDataGrid-cell MuiDataGrid-cell--textLeft"
+    data-colindex="5"
+    data-field="judges"
+    role="cell"
+    style="min-width: 0; max-width: 0; min-height: 36px; max-height: 36px;"
+    tabindex="-1"
+  >
+    <div
+      class="MuiDataGrid-cellContent"
+    >
+      Tuomari 1
+    </div>
+  </div>
+  <div
+    aria-colindex="7"
+    aria-colspan="1"
+    class="MuiDataGrid-cell MuiDataGrid-cell--textRight"
+    data-colindex="6"
+    data-field="places"
+    role="cell"
+    style="min-width: 80px; max-width: 80px; min-height: 36px; max-height: 36px;"
+    tabindex="-1"
+  >
+    <div
+      class="MuiDataGrid-cellContent"
+    >
+      0 / 10
+    </div>
+  </div>
+  <div
+    aria-colindex="8"
+    aria-colspan="1"
+    class="MuiDataGrid-cell MuiDataGrid-cell--textLeft"
+    data-colindex="7"
+    data-field="state"
+    role="cell"
+    style="min-width: 0; max-width: 0; min-height: 36px; max-height: 36px;"
+    tabindex="-1"
+  >
+    <div
+      class="MuiDataGrid-cellContent"
+    >
+      Julkaistu
+    </div>
+  </div>
+</div>
+`;

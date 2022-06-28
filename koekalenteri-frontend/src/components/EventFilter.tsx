@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
 import { URLSearchParamsInit } from 'react-router-dom';
 import { AutocompleteMulti, DateRange } from '.';
-import { FilterProps } from '../stores/PublicStore';
+import { FilterProps } from '../stores/EventStore';
 
 type EventFilterProps = {
   eventTypes: string[]

@@ -1,28 +1,44 @@
-import { Registration } from "koekalenteri-shared/model";
+import { JsonRegistration, Registration } from "koekalenteri-shared/model";
 import { makeAutoObservable } from "mobx";
 import { getRegistration, getRegistrations, putRegistration } from "../api/event";
-import { RootStore } from "./RootStore";
+import { CRegistration } from "./classes";
+import type { RootStore } from "./RootStore";
 
 export class RegistrationStore {
   rootStore
-  registration: Partial<Registration> = {}
+  registration
 
   constructor(rootStore: RootStore) {
+    this.rootStore = rootStore;
+    this.registration = new CRegistration(this);
+
     makeAutoObservable(this, {
       rootStore: false
     })
-    this.rootStore = rootStore;
   }
 
   async load(eventId: string, id: string, signal?: AbortSignal) {
-    return getRegistration(eventId, id, signal);
+    const json = await getRegistration(eventId, id, signal);
+    if (json) {
+      this.registration.updateFromJson(json);
+    }
   }
 
   async loadAll(eventId: string, signal?: AbortSignal) {
-    return getRegistrations(eventId, signal);
+    const arr = await getRegistrations(eventId, signal);
+    return arr.map(json => {
+      const reg = new CRegistration(this);
+      reg.updateFromJson(json);
+      return reg;
+    })
   }
 
   async save(registration: Registration) {
-    return putRegistration(registration);
+    const json = await putRegistration(registration);
+    this.registration.updateFromJson(json.registration);
+    this.rootStore.eventStore.updateEntries(json);
+    return json.registration;
   }
+
+  toJSON() { return {} }
 }

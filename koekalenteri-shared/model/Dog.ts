@@ -23,18 +23,19 @@ export type DogName = {
 export type DogGender = 'F' | 'M'
 
 export type JsonTestResult = {
-  type: string
-  class: string
+  cert?: boolean
+  class?: string
   date: string
-  location: string
-  result: string
+  ext?: string
   judge: string
+  location: string
+  notes?: string
+  official?: boolean
   points?: number
   rank?: number
-  ext?: string
-  notes?: string
-  cert?: boolean
   resCert?: boolean
+  result: string
+  type: string
 }
 
 export type TestResult = Replace<JsonTestResult, 'date', Date>

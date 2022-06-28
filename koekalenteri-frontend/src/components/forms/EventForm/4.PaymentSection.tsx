@@ -1,20 +1,21 @@
 import { Grid, InputAdornment } from "@mui/material";
-import { Event } from "koekalenteri-shared/model";
+import { AdminEvent } from "koekalenteri-shared/model";
 import { useTranslation } from "react-i18next";
-import { PartialEvent } from ".";
 import { CollapsibleSection } from "../..";
 import { FieldRequirements } from "./validation";
 import { EventProperty, EventPropertyProps } from "./EventProperty";
+import { CAdminEvent } from "../../../stores/classes";
+import { observer } from "mobx-react-lite";
 
 type PaymentSectionProps = {
-  event: PartialEvent
+  event: CAdminEvent
   fields: FieldRequirements
-  onChange: (props: Partial<Event>) => void
+  onChange: (props: Partial<AdminEvent>) => void
   onOpenChange?: (value: boolean) => void
   open?: boolean
 }
 
-export function PaymentSection({ event, fields, onChange, open, onOpenChange }: PaymentSectionProps) {
+export const PaymentSection = observer(function PaymentSection({ event, fields, onChange, open, onOpenChange }: PaymentSectionProps) {
   const { t } = useTranslation();
 
   return (
@@ -39,11 +40,11 @@ export function PaymentSection({ event, fields, onChange, open, onOpenChange }: 
       </Grid>
     </CollapsibleSection>
   );
-}
+})
 
 type ValidatedPriceInputProps = Omit<EventPropertyProps<'cost'|'costMember', true>, 'options'>;
 
-function EventPrice(props: ValidatedPriceInputProps) {
+const EventPrice = observer(function EventPrice(props: ValidatedPriceInputProps) {
   return (
     <EventProperty
       {...props}
@@ -54,4 +55,4 @@ function EventPrice(props: ValidatedPriceInputProps) {
       onChange={(newProps) => props.onChange({[props.id]: +(newProps[props.id] || '')})}
     />
   );
-}
+})

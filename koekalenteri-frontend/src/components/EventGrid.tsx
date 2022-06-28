@@ -1,22 +1,27 @@
 import { Box } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { EventClass, EventEx, EventState } from 'koekalenteri-shared/model';
+import { GridColDef } from '@mui/x-data-grid';
+import { AdminEvent, EventClass, EventState } from 'koekalenteri-shared/model';
+import { computed, toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ADMIN_EDIT_EVENT } from '../config';
-import { useStores } from '../stores';
+import { useSessionStorage, useStores } from '../stores';
+import { CAdminEvent } from '../stores/classes/CAdminEvent';
+import { StyledDataGrid } from './StyledDataGrid';
 
 interface EventGridColDef extends GridColDef {
-  field: keyof EventEx | 'date'
+  field: keyof AdminEvent | 'date'
 }
 
 type StartEndDate = { start: Date, end: Date };
 
-export const EventGrid = observer(function EventGrid({ events }: { events: Partial<EventEx>[] }) {
+export const EventGrid = observer(function EventGrid() {
   const { t } = useTranslation();
-  const { rootStore, privateStore } = useStores();
+  const { rootStore } = useStores();
+  const [selectedId, setSelectedId] = useSessionStorage('adminEventId', '');
   const naviage = useNavigate();
+  const loading = computed(() => rootStore.adminEventStore.loading).get();
 
   const columns: EventGridColDef[] = [
     {
@@ -58,21 +63,21 @@ export const EventGrid = observer(function EventGrid({ events }: { events: Parti
       headerName: t('judgeChief'),
       minWidth: 100,
       flex: 1,
-      valueGetter: (params) => rootStore.judgeStore.getJudge(params.row.judges[0])?.toJSON().name
+      valueGetter: (params) => params.row.judges[0]?.name
     },
     {
       field: 'places',
       headerName: t('places'),
       align: 'right',
       width: 80,
-      valueGetter: (params) => `${params.row.entries} / ${params.row.places}`
+      valueGetter: (params) => params.row.places ? `${params.row.entries || 0} / ${params.row.places}` : '-'
     },
     {
       field: 'state',
       headerName: t('event.state'),
       flex: 1,
       type: 'string',
-      valueGetter: (params) => (params.row as EventEx).isEntryOpen ? t('event.states.confirmed_entryOpen') : t(`event.states.${(params.value || 'draft') as EventState}`)
+      valueGetter: (params) => (params.row as CAdminEvent).isEntryOpen ? t('event.states.confirmed_entryOpen') : t(`event.states.${(params.value || 'draft') as EventState}`)
     },
   ];
 
@@ -84,41 +89,22 @@ export const EventGrid = observer(function EventGrid({ events }: { events: Parti
       width: '100%',
       minHeight: 300,
     }}>
-      <DataGrid
+      <StyledDataGrid
         autoPageSize
         columns={columns}
         density='compact'
         disableColumnMenu
-        rows={events}
-        onSelectionModelChange={(newSelectionModel) => {
-          const id = newSelectionModel.length === 1 ? newSelectionModel[0] : '';
-          privateStore.setSelectedEvent(events.find(e => e.id === id));
-        }}
-        selectionModel={privateStore.selectedEvent && privateStore.selectedEvent.id ? [privateStore.selectedEvent.id] : []}
-        onRowDoubleClick={() => naviage(`${ADMIN_EDIT_EVENT}/${privateStore.selectedEvent?.id}`)}
-        sx={{
-          '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: 'background.tableHead'
-          },
-          '& .MuiDataGrid-row:nth-of-type(2n+1)': {
-            backgroundColor: 'background.oddRow'
-          },
-          '& .MuiDataGrid-cell:focus': {
-            outline: 'none'
-          },
-          '& .MuiDataGrid-row.Mui-selected': {
-            backgroundColor: 'background.selected'
-          },
-          '& .MuiDataGrid-row:hover': {
-            backgroundColor: undefined
-          },
-          '& .MuiDataGrid-row.Mui-selected:hover': {
-            backgroundColor: 'background.hover'
-          },
-          '& .MuiDataGrid-row:hover > .MuiDataGrid-cell': {
-            backgroundColor: 'background.hover'
+        loading={loading}
+        rows={toJS(rootStore.adminEventStore.events)}
+        onSelectionModelChange={newSelectionModel => {
+          if (loading || !newSelectionModel?.length) {
+            return;
           }
+
+          setSelectedId(newSelectionModel[0] as string);
         }}
+        selectionModel={selectedId || undefined}
+        onRowDoubleClick={() => naviage(`${ADMIN_EDIT_EVENT}/${selectedId}`)}
       />
     </Box>
   );

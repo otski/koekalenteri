@@ -1,18 +1,19 @@
 import { Grid } from '@mui/material';
 import type { Person, ShowContactInfo } from 'koekalenteri-shared/model';
+import { observer } from 'mobx-react-lite';
 import { useTranslation } from 'react-i18next';
-import { PartialEvent } from './forms/EventForm';
+import { CAdminEvent } from '../stores/classes';
 
-export function EventContactInfo({ event }: { event: PartialEvent }) {
+export const EventContactInfo = observer(function EventContactInfo({ event }: { event: CAdminEvent }) {
   return (
     <Grid container rowSpacing={1}>
-      <ContactInfo contact='official' person={event.official} show={event.contactInfo?.official} />
-      <ContactInfo contact='secretary' person={event.secretary} show={event.contactInfo?.secretary} />
+      <ContactInfo contact='official' person={event.official} show={event.visibleContactInfo?.official} />
+      <ContactInfo contact='secretary' person={event.secretary} show={event.visibleContactInfo?.secretary} />
     </Grid>
   );
-}
+})
 
-function ContactInfo({ contact, person, show }: { contact: 'official'|'secretary', person?: Person, show?: Partial<ShowContactInfo> }) {
+const ContactInfo = observer(function ContactInfo({ contact, person, show }: { contact: 'official'|'secretary', person?: Person, show?: Partial<ShowContactInfo> }) {
   const { t } = useTranslation();
   if (!person || !show || (!show.name && !show.email && !show.phone)) {
     return (<></>);
@@ -25,4 +26,4 @@ function ContactInfo({ contact, person, show }: { contact: 'official'|'secretary
       <Grid item xs>{show?.phone ? person.phone : ''}</Grid>
     </Grid>
   )
-}
+})

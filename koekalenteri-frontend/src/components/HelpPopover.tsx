@@ -1,3 +1,4 @@
+/* eslint-disable mobx/missing-observer */
 import { Fade, Paper, Popover } from '@mui/material';
 import { ReactNode } from 'react';
 

@@ -1,9 +1,8 @@
-import { Dog } from "koekalenteri-shared/model";
-import { rehydrateDog } from "../dog";
+import { JsonDog } from "koekalenteri-shared/model";
 
-export async function getDog(regNo: string, refresh?: boolean, signal?: AbortSignal): Promise<Dog> {
+export async function getDog(regNo: string, refresh?: boolean, signal?: AbortSignal): Promise<JsonDog> {
   return new Promise((resolve) => {
-    process.nextTick(() => resolve(rehydrateDog({
+    process.nextTick(() => resolve({
       regNo,
       name: 'Test Dog',
       rfid: 'rfid',
@@ -11,6 +10,6 @@ export async function getDog(regNo: string, refresh?: boolean, signal?: AbortSig
       gender: 'M',
       breedCode: '121',
       titles: ''
-    })));
+    }));
   });
 }

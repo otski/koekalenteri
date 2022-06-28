@@ -1,10 +1,14 @@
 import { Cancel, Save } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import { Box, Button, Checkbox, Collapse, FormControl, FormControlLabel, FormHelperText, Link, Paper, Stack, Theme, useMediaQuery } from '@mui/material';
-import { ConfirmedEventEx, Language, Registration } from 'koekalenteri-shared/model';
+import { Event, Registration } from 'koekalenteri-shared/model';
+import { autorun } from 'mobx';
+import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStores } from '../../../stores';
+import { CRegistration } from '../../../stores/classes/CRegistration';
+import { ValidationError } from '../validation';
 import { EntryInfo, getRegistrationDates } from './1.Entry';
 import { DogInfo } from './2.Dog';
 import { BreederInfo } from './3.Breeder';
@@ -12,13 +16,13 @@ import { OwnerInfo } from './4.OwnerInfo';
 import { HandlerInfo } from './5.HandlerInfo';
 import { QualifyingResultsInfo } from './6.QualifyingResultsInfo';
 import { AdditionalInfo } from './7.AdditionalInfo';
-import { RegistrationClass } from './rules';
+import { RegistrationClass } from '../../../rules';
 import { filterRelevantResults, validateRegistration } from './validation';
 
-type FormEventHandler = (registration: Registration) => Promise<boolean>;
+type FormEventHandler = (registration: CRegistration) => Promise<boolean>;
 type RegistrationFormProps = {
-  event: ConfirmedEventEx
-  registration?: Registration
+  event: Event
+  registration: CRegistration
   className?: string
   classDate?: string
   onSave?: FormEventHandler
@@ -42,77 +46,38 @@ export const emptyPerson = {
   membership: false
 };
 
-export function RegistrationForm({ event, className, registration, classDate, onSave, onCancel }: RegistrationFormProps) {
-  const { publicStore } = useStores();
-  const eventHasClasses = (publicStore.eventTypeClasses[event.eventType] || []).length > 0;
+export const RegistrationForm = observer(function RegistrationForm({ event, registration, className, classDate, onSave, onCancel }: RegistrationFormProps) {
+  const { rootStore } = useStores();
+  const eventHasClasses = (rootStore.eventTypeClasses[event.eventType] || []).length > 0;
   const large = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'));
-  const { t, i18n } = useTranslation();
-  const [local, setLocal] = useState<Registration>({
-    eventId: event.id,
-    id: '',
-    eventType: event.eventType,
-    language: i18n.language as Language,
-    class: className || '',
-    dates: getRegistrationDates(event, classDate, className || ''),
-    reserve: 'ANY',
-    dog: { ...emptyDog },
-    breeder: { ...emptyBreeder },
-    owner: { ...emptyPerson },
-    ownerHandles: true,
-    handler: { ...emptyPerson },
-    qualifyingResults: [],
-    notes: '',
-    agreeToTerms: false,
-    agreeToPublish: false,
-    createdAt: new Date(),
-    createdBy: '',
-    modifiedAt: new Date(),
-    modifiedBy: '',
-    ...registration
-  });
-  const [qualifies, setQualifies] = useState<boolean | null>(local.id ? filterRelevantResults(event, local.class as RegistrationClass, local.dog.results).qualifies : null);
+  const { t } = useTranslation();
+  const [qualifies, setQualifies] = useState<boolean | null>(registration.id ? filterRelevantResults(event, registration.class as RegistrationClass, registration.dog?.results).qualifies : null);
   const [saving, setSaving] = useState(false);
-  const [changes, setChanges] = useState(local.id === '');
-  const [errors, setErrors] = useState(validateRegistration(local, event));
+  const [changes, setChanges] = useState(registration.id === '');
+  const [errors, setErrors] = useState<ValidationError<Registration, "registration">[]>([]);
   const [open, setOpen] = useState<{ [key: string]: boolean | undefined }>({});
   const valid = errors.length === 0;
   const onChange = (props: Partial<Registration>) => {
     console.log('Changes: ' + JSON.stringify(props));
     if (props.class && !props.dates) {
-      const allCount = getRegistrationDates(event, classDate, local.class || '').length;
+      const allCount = getRegistrationDates(event, classDate, registration.class || '').length;
       const available = getRegistrationDates(event, classDate, props.class);
-      if (local.dates.length === allCount) {
-        local.dates = available;
+      if (registration.dates.length === allCount) {
+        registration.dates = available;
       } else {
-        props.dates = local.dates.filter(rd => available.find(a => a.date.valueOf() === rd.date.valueOf() && a.time === rd.time));
+        props.dates = registration.dates.filter(rd => available.find(a => a.date.valueOf() === rd.date.valueOf() && a.time === rd.time));
       }
     }
-    if (props.class || props.dog || props.results) {
-      const c = props.class || local.class;
-      const dog = props.dog || local.dog;
-      const filtered = filterRelevantResults(event, c as RegistrationClass, dog.results, props.results || local.results);
-      setQualifies((!dog.regNo || (eventHasClasses && !c)) ? null : filtered.qualifies);
-      props.qualifyingResults = filtered.relevant;
-    }
-    if (props.ownerHandles || (props.owner && local.ownerHandles)) {
-      props.handler = { ...local.owner, ...props.owner }
-    }
-    if (props.ownerHandles) {
-      setOpen({ ...open, handler: true });
-    }
-    const newState = { ...local, ...props };
-    setErrors(validateRegistration(newState, event));
-    setLocal(newState);
     setChanges(true);
     setSaving(false);
   }
   const saveHandler = async () => {
     setSaving(true);
-    if (onSave && await onSave(local) === false) {
+    if (onSave && (await onSave(registration)) === false) {
       setSaving(false);
     }
   }
-  const cancelHandler = () => onCancel && onCancel(local);
+  const cancelHandler = () => onCancel && onCancel(registration);
   const handleOpenChange = (id: keyof typeof open, value: boolean) => {
     const newState = large
       ? {
@@ -124,7 +89,7 @@ export function RegistrationForm({ event, className, registration, classDate, on
         dog: false,
         breeder: false,
         owner: false,
-        handler: local.ownerHandles,
+        handler: registration.ownerHandles,
         qr: false,
         info: false,
         [id]: value
@@ -133,10 +98,10 @@ export function RegistrationForm({ event, className, registration, classDate, on
   }
   const errorStates: { [Property in keyof Registration]?: boolean } = {};
   const helperTexts: { [Property in keyof Registration]?: string } = {
-    breeder: `${local.breeder?.name || ''}`,
-    dog: !local.dog ? '' : `${local.dog.regNo} - ${local.dog.name}`,
-    handler: !local.handler ? '' : local.handler.name === local.owner.name ? t('registration.ownerHandles') : `${local.handler.name}`,
-    owner: !local.owner ? '' : `${local.owner.name}`,
+    breeder: `${registration.breeder?.name || ''}`,
+    dog: !registration.dog ? '' : `${registration.dog.regNo} - ${registration.dog.name}`,
+    handler: !registration.handler ? '' : registration.handler.name === registration.owner.name ? t('registration.ownerHandles') : `${registration.handler.name}`,
+    owner: !registration.owner ? '' : `${registration.owner.name}`,
     qualifyingResults: qualifies === null ? '' : t('registration.qualifyingResultsInfo', { qualifies: t(qualifies ? 'registration.qyalifyingResultsYes' : 'registration.qualifyingResultsNo') }),
   };
   for (const error of errors) {
@@ -156,6 +121,16 @@ export function RegistrationForm({ event, className, registration, classDate, on
     });
   }, [large]);
 
+  useEffect(() => autorun(() => {
+    setErrors(validateRegistration(registration, event));
+    const c = registration.class;
+    const dog = registration.dog;
+    const filtered = filterRelevantResults(event, c as RegistrationClass, dog?.results, registration.results);
+    setQualifies((!dog?.regNo || (eventHasClasses && !c)) ? null : filtered.qualifies);
+    //registration.qualifyingResults = filtered.relevant;
+
+  }), []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <Paper elevation={2} sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'auto', maxHeight: '100%', maxWidth: '100%' }}>
       <Box sx={{
@@ -168,57 +143,53 @@ export function RegistrationForm({ event, className, registration, classDate, on
         },
         '& .fact input.Mui-disabled': {
           color: 'success.main',
-          '-webkit-text-fill-color': 'inherit'
+          'WebkitTextFillColor': 'inherit'
         }
       }}>
         <EntryInfo
-          reg={local}
+          reg={registration}
           event={event}
+          className={className}
           classDate={classDate}
           errorStates={errorStates}
           helperTexts={helperTexts}
-          onChange={onChange}
           onOpenChange={(value) => handleOpenChange('entry', value)}
           open={open.entry}
         />
         <DogInfo
-          reg={local}
+          reg={registration}
           eventDate={event.startDate}
           minDogAgeMonths={9}
           error={errorStates.dog}
           helperText={helperTexts.dog}
-          onChange={onChange}
           onOpenChange={(value) => handleOpenChange('dog', value)}
           open={open.dog}
         />
         <BreederInfo
-          reg={local}
+          reg={registration}
           error={errorStates.breeder}
           helperText={helperTexts.breeder}
-          onChange={onChange}
           onOpenChange={(value) => handleOpenChange('breeder', value)}
           open={open.breeder}
         />
         <OwnerInfo
-          reg={local}
+          reg={registration}
           error={errorStates.owner}
           helperText={helperTexts.owner}
-          onChange={onChange}
           onOpenChange={(value) => handleOpenChange('owner', value)}
           open={open.owner}
         />
-        <Collapse in={!local.ownerHandles}>
+        <Collapse in={!registration.ownerHandles}>
           <HandlerInfo
-            reg={local}
+            reg={registration}
             error={errorStates.handler}
             helperText={helperTexts.handler}
-            onChange={onChange}
             onOpenChange={(value) => handleOpenChange('handler', value)}
             open={open.handler}
           />
         </Collapse>
         <QualifyingResultsInfo
-          reg={local}
+          reg={registration}
           error={!qualifies}
           helperText={helperTexts.qualifyingResults}
           onChange={onChange}
@@ -226,14 +197,15 @@ export function RegistrationForm({ event, className, registration, classDate, on
           open={open.qr}
         />
         <AdditionalInfo
-          reg={local}
-          onChange={onChange}
+          reg={registration}
           onOpenChange={(value) => handleOpenChange('info', value)}
           open={open.info}
         />
         <Box sx={{ m: 1, mt: 2, ml: 4, borderTop: '1px solid #bdbdbd' }}>
-          <FormControl error={errorStates.agreeToTerms} disabled={!!local.id}>
-            <FormControlLabel control={<Checkbox checked={local.agreeToTerms} onChange={e => onChange({ agreeToTerms: e.target.checked })} />} label={
+          <FormControl error={errorStates.agreeToTerms} disabled={!!registration.id}>
+            <FormControlLabel control={<Checkbox checked={registration.agreeToTerms} onChange={e => {
+              registration.agreeToTerms = e.target.checked;
+            }} />} label={
               <>
                 <span>{t('registration.terms.read')}</span>&nbsp;
                 <Link target="_blank" rel="noopener" href="https://yttmk.yhdistysavain.fi/noutajien-metsastyskokeet-2/ohjeistukset/kokeen-ja-tai-kilpailun-ilmoitta/">{t('registration.terms.terms')}</Link>
@@ -242,8 +214,10 @@ export function RegistrationForm({ event, className, registration, classDate, on
             } />
           </FormControl>
           <FormHelperText error>{helperTexts.agreeToTerms}</FormHelperText>
-          <FormControl error={errorStates.agreeToPublish} disabled={!!local.id}>
-            <FormControlLabel control={<Checkbox checked={local.agreeToPublish} onChange={e => onChange({ agreeToPublish: e.target.checked })} />} label={t('registration.terms.publish')} />
+          <FormControl error={errorStates.agreeToPublish} disabled={!!registration.id}>
+            <FormControlLabel control={<Checkbox checked={registration.agreeToPublish} onChange={e => {
+              registration.agreeToPublish = e.target.checked
+            }} />} label={t('registration.terms.publish')} />
           </FormControl>
           <FormHelperText error>{helperTexts.agreeToPublish}</FormHelperText>
         </Box>
@@ -255,4 +229,4 @@ export function RegistrationForm({ event, className, registration, classDate, on
       </Stack>
     </Paper>
   );
-}
+})

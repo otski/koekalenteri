@@ -1,5 +1,5 @@
 import { CircularProgress } from '@mui/material';
-import { toJS } from 'mobx';
+import { autorun } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
@@ -8,61 +8,74 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { EventForm } from '../../components';
 import { ADMIN_EVENTS } from '../../config';
 import { useStores } from '../../stores';
+import { CAdminEvent } from '../../stores/classes';
 import { AuthPage } from './AuthPage';
 
 export const EventEditPage = observer(function EventEditPage({create}: {create?: boolean}) {
   const params = useParams();
   const { t } = useTranslation();
-  const { rootStore, publicStore, privateStore } = useStores();
+  const { rootStore } = useStores();
   const { enqueueSnackbar } = useSnackbar();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [event, setEvent] = useState<CAdminEvent>();
   const navigate = useNavigate();
+  const title = create ? t('createEvent') : 'Muokkaa tapahtumaa';
 
-  useEffect(() => {
-    const abort = new AbortController();
+  useEffect(() => autorun(() => {
     async function get(id: string) {
-      const result = await privateStore.get(id, abort.signal);
-      privateStore.setSelectedEvent(result);
+      if (!rootStore.adminEventStore.loaded) {
+        await rootStore.adminEventStore.load();
+      }
+      const stored = rootStore.adminEventStore.find(id);
+      const clone = new CAdminEvent(rootStore.adminEventStore);
+      if (stored) {
+        clone.updateFromJson(stored.toJSON());
+      }
+      setEvent(clone);
       setLoading(false);
     }
-    if (params.id && privateStore.selectedEvent?.id !== params.id) {
-      get(params.id);
-    } else {
-      setLoading(false);
+    if (!loading && (!event || event.id !== params.id)) {
+      setLoading(true);
+      if (params.id) {
+        console.log(params);
+        get(params.id);
+      } else {
+        console.log(params);
+        setEvent(new CAdminEvent(rootStore.adminEventStore));
+        setLoading(false);
+      }
     }
-    return () => abort.abort();
-  }, [params, privateStore]);
+  }), []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!event || loading) {
+    return (
+      <AuthPage title={title}>
+        <CircularProgress />
+      </AuthPage>
+    )
+  }
 
   return (
-    <AuthPage title={create ? t('createEvent') : 'Muokkaa tapahtumaa'}>
-      {loading
-        ? <CircularProgress />
-        : <EventForm
-          event={toJS(! create && privateStore.selectedEvent ? privateStore.selectedEvent : privateStore.newEvent)}
-          eventTypes={rootStore.eventTypeStore.activeEventTypes.map(et => et.eventType)}
-          eventTypeClasses={publicStore.eventTypeClasses}
-          judges={rootStore.judgeStore.activeJudges.map(j => j.toJSON())}
-          officials={rootStore.officialStore.officials.map(o => o.toJSON())}
-          organizers={rootStore.organizerStore.organizers.map(o => o.toJSON())}
-          onSave={async (event) => {
-            try {
-              await privateStore.putEvent(event)
-              navigate(ADMIN_EVENTS);
-              enqueueSnackbar(t(`event.states.${event.state || 'draft'}`, { context: 'save' }), { variant: 'info' });
-              return Promise.resolve(true);
-            } catch (e: any) {
-              enqueueSnackbar(e.message, { variant: 'error' });
-              return Promise.resolve(false);
-            }
-          }}
-          onCancel={(event) => {
-            if (create) {
-              privateStore.newEvent = { ...event }
-            }
+    <AuthPage title={title}>
+      <EventForm
+        event={event}
+        eventTypes={rootStore.eventTypeStore.activeEventTypes.map(et => et.eventType)}
+        onSave={async () => {
+          try {
+            await rootStore.adminEventStore.save(event)
             navigate(ADMIN_EVENTS);
+            enqueueSnackbar(t(`event.states.${event.state || 'draft'}`, { context: 'save' }), { variant: 'info' });
             return Promise.resolve(true);
-          }}
-        />}
+          } catch (e: any) {
+            enqueueSnackbar(e.message, { variant: 'error' });
+            return Promise.resolve(false);
+          }
+        }}
+        onCancel={async () => {
+          navigate(ADMIN_EVENTS, {});
+          return Promise.resolve(true);
+        }}
+      />
     </AuthPage>
   )
 })

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 
 export type Setter<T> = React.Dispatch<React.SetStateAction<T>>;
 
@@ -25,22 +25,48 @@ function writeStorage(storage: Storage, key: string, value: string | null): void
   }
 }
 
+const useIsMounted = () => {
+  const ref = useRef(false);
+  useEffect(() => { ref.current = true }, []);
+  return ref.current;
+}
+
 function useStorage(storage: Storage, key: string, defaultValue: string): [string | null, Setter<string | null>] {
-  const [storedValue, setValue] = useState<string | null>(() => readStorage(storage, key) || defaultValue);
+  const isMounted = useIsMounted();
+  const [storedValue, setValue] = useState<string | null>(readStorage(storage, key) || defaultValue);
   const handleStorageChange = useCallback((e: StorageEvent) => {
     if (e.storageArea === storage && e.key === key) {
+      console.log('change', e);
       setValue(e.newValue);
     }
   }, [storage, key]);
 
-  useEffect(() => writeStorage(storage, key, storedValue), [storage, key, storedValue]);
+  useEffect(() => {
+    if (!isMounted) {
+      return;
+    }
+    const oldValue = readStorage(storage, key);
+    if (storedValue === oldValue) {
+      return;
+    }
+    writeStorage(storage, key, storedValue);
+    if (storage === sessionStorage) {
+      dispatchEvent(new StorageEvent('storage', { storageArea: storage, key, newValue: storedValue, oldValue }));
+    }
+  }, [storage, key, storedValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [handleStorageChange]);
 
-  return [storedValue, setValue];
+  const setValueWrap = (value: SetStateAction<string | null>) => {
+    if (value !== storedValue) {
+      setValue(value);
+    }
+  }
+
+  return [storedValue, setValueWrap];
 }
 
 export const useLocalStorage = (key: string, defaultValue: string) => useStorage(localStorage, key, defaultValue);

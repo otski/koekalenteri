@@ -1,33 +1,34 @@
-import { DeepPartial, Dog, Registration, RegistrationBreeder, RegistrationPerson } from "koekalenteri-shared/model";
-import merge from "lodash.merge";
-import { makeAutoObservable, runInAction, toJS } from "mobx";
+import { DogName, RegistrationBreeder, RegistrationPerson } from "koekalenteri-shared/model";
+import { makeAutoObservable, runInAction } from "mobx";
 import { getDog } from "../api/dog";
-import { RootStore } from "./RootStore";
+import { CDog } from "./classes/CDog";
+import { CRegistration } from "./classes/CRegistration";
+import type { RootStore } from "./RootStore";
 
 const STORAGE_KEY = 'dog-cache';
 
 export type DogCachedInfo = {
-  breeder: RegistrationBreeder,
-  handler: RegistrationPerson,
-  owner: RegistrationPerson,
-  ownerHandles: boolean,
+  breeder: RegistrationBreeder
+  dam?: DogName
+  handler: RegistrationPerson
+  owner: RegistrationPerson
+  ownerHandles: boolean
+  sire?: DogName
 }
 
 export class DogStore {
   rootStore
-  _data: Record<string, Partial<Dog & DogCachedInfo>> = {}
+  _data: Record<string, CDog> = {}
 
   constructor(rootStore: RootStore) {
+    this.rootStore = rootStore;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    this._data = stored ? JSON.parse(stored) : {};
+    window.addEventListener('storage', this._change);
+
     makeAutoObservable(this, {
       rootStore: false
     })
-    this.rootStore = rootStore;
-    const stored = localStorage.getItem(STORAGE_KEY);
-    runInAction(() => {
-      this._data = stored ? JSON.parse(stored) : {};
-    });
-    window.addEventListener('storage', this._change);
-
   }
 
   dispose() {
@@ -50,40 +51,25 @@ export class DogStore {
     return Object.values(this._data);
   }
 
-  async load(regNo: string, refresh?: boolean, signal?: AbortSignal): Promise<Partial<Dog & DogCachedInfo>> {
+  async load(regNo: string, refresh?: boolean, signal?: AbortSignal): Promise<CDog> {
     const official = await getDog(regNo, refresh, signal);
-    const local = this._data[regNo] || {};
-    return toJS({
-      ...local,
-      ...official
+    const local = this._data[regNo];
+    const dog = new CDog(local);
+    runInAction(() => {
+      dog.updateFromJson(official);
     });
+    return dog;
   }
 
-  save(reg: DeepPartial<Registration>) {
-    const regNo = reg.dog?.regNo;
-    if (regNo) {
-      const record = merge(this._data[regNo] || {},
-        reg.dog,
-        {
-          breeder: reg.breeder,
-          handler: reg.handler,
-          owner: reg.owner,
-          ownerHandles: reg.ownerHandles,
-        });
-      this._data[regNo] = {
-        breeder: record.breeder,
-        callingName: record.callingName,
-        dam: record.dam,
-        handler: record.handler,
-        owner: record.owner,
-        ownerHandles: !!record.ownerHandles,
-        regNo: record.regNo,
-        sire: record.sire,
-        titles: record.titles,
-      };
-      this._save();
+  save(reg: CRegistration) {
+    if (!reg.dog || !reg.dog.regNo) {
+      return;
     }
+    this._data[reg.dog.regNo] = reg.dog;
+    this._save();
   }
+
+  toJSON() { return {} }
 }
 
 

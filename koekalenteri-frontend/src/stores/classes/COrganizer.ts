@@ -10,12 +10,13 @@ export class COrganizer {
   store: OrganizerStore;
 
   constructor(store: OrganizerStore, id: number) {
+    this.id = id;
+    this.store = store;
+
     makeAutoObservable(this, {
       id: false,
       store: false,
     });
-    this.id = id;
-    this.store = store;
   }
 
   updateFromJson(json: Organizer) {
@@ -23,7 +24,7 @@ export class COrganizer {
     this.search = json.name.toLocaleLowerCase();
   }
 
-  toJSON() {
+  toJSON(): Organizer {
     return {
       id: this.id,
       name: this.name

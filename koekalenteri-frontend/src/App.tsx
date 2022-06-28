@@ -1,8 +1,9 @@
+/* eslint-disable mobx/missing-observer */
 import { Auth } from '@aws-amplify/auth';
 import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
-import AdapterDateFns from '@mui/lab/AdapterDateFns';
-import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { createTheme } from '@mui/material/styles';
 import { makeStyles, ThemeProvider } from '@mui/styles';
 import { SnackbarProvider } from 'notistack';
@@ -28,7 +29,7 @@ function App() {
 
   return (
     <ThemeProvider theme={(outerTheme) => createTheme(outerTheme, muiLocales[language])}>
-      <LocalizationProvider dateAdapter={AdapterDateFns} locale={locales[language]}>
+      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={locales[language]}>
         <SnackbarProvider
           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
           classes={{ containerRoot: classes.snack }}
