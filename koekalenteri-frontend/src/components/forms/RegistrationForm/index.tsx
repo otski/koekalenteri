@@ -3,7 +3,7 @@ import { LoadingButton } from '@mui/lab';
 import { Box, Button, Checkbox, Collapse, FormControl, FormControlLabel, FormHelperText, Link, Paper, Stack, Theme, useMediaQuery } from '@mui/material';
 import { ConfirmedEventEx, Language, Registration } from 'koekalenteri-shared/model';
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { TFunction, useTranslation } from 'react-i18next';
 import { useStores } from '../../../stores';
 import { EntryInfo, getRegistrationDates } from './1.Entry';
 import { DogInfo } from './2.Dog';
@@ -132,13 +132,7 @@ export function RegistrationForm({ event, className, registration, classDate, on
     setOpen(newState);
   }
   const errorStates: { [Property in keyof Registration]?: boolean } = {};
-  const helperTexts: { [Property in keyof Registration]?: string } = {
-    breeder: `${local.breeder?.name || ''}`,
-    dog: !local.dog ? '' : `${local.dog.regNo} - ${local.dog.name}`,
-    handler: !local.handler ? '' : local.handler.name === local.owner.name ? t('registration.ownerHandles') : `${local.handler.name}`,
-    owner: !local.owner ? '' : `${local.owner.name}`,
-    qualifyingResults: qualifies === null ? '' : t('registration.qualifyingResultsInfo', { qualifies: t(qualifies ? 'registration.qyalifyingResultsYes' : 'registration.qualifyingResultsNo') }),
-  };
+  const helperTexts = getSectionHelperTexts(local, qualifies, t);
   for (const error of errors) {
     helperTexts[error.opts.field] = t(`validation.registration.${error.key}`, error.opts);
     errorStates[error.opts.field] = true;
@@ -168,7 +162,7 @@ export function RegistrationForm({ event, className, registration, classDate, on
         },
         '& .fact input.Mui-disabled': {
           color: 'success.main',
-          '-webkit-text-fill-color': 'inherit'
+          WebkitTextFillColor: 'inherit'
         }
       }}>
         <EntryInfo
@@ -250,9 +244,23 @@ export function RegistrationForm({ event, className, registration, classDate, on
       </Box>
 
       <Stack spacing={1} direction="row" justifyContent="flex-end" sx={{ p: 1, borderTop: '1px solid', borderColor: '#bdbdbd' }}>
-        <LoadingButton color="primary" disabled={!changes || !valid} loading={saving} loadingPosition="start" startIcon={<Save />} variant="contained" onClick={saveHandler}>Tallenna</LoadingButton>
+        <LoadingButton color="primary" disabled={!changes || !valid} loading={saving} loadingPosition="start" startIcon={<Save />} variant="contained" onClick={saveHandler}>{local.id ? 'Tallenna muutokset' : 'Tallenna'}</LoadingButton>
         <Button startIcon={<Cancel />} variant="outlined" onClick={cancelHandler}>Peruuta</Button>
       </Stack>
     </Paper>
   );
+}
+
+function getSectionHelperTexts(
+  local: Registration,
+  qualifies: boolean | null,
+  t: TFunction<"translation", undefined>
+): { [Property in keyof Registration]?: string } {
+  return {
+    breeder: `${local.breeder?.name || ''}`,
+    dog: !local.dog ? '' : `${local.dog.regNo} - ${local.dog.name}`,
+    handler: !local.handler ? '' : local.handler.name === local.owner.name ? t('registration.ownerHandles') : `${local.handler.name}`,
+    owner: !local.owner ? '' : `${local.owner.name}`,
+    qualifyingResults: qualifies === null ? '' : t('registration.qualifyingResultsInfo', { qualifies: t(qualifies ? 'registration.qyalifyingResultsYes' : 'registration.qualifyingResultsNo') }),
+  };
 }
