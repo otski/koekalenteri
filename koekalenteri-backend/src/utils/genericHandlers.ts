@@ -80,6 +80,8 @@ export const genericWriteHandler = (dynamoDB: CustomDynamoClient, name: string):
 
 export function authorize(event: APIGatewayProxyEvent) {
   // TODO: remove unauthorized access
+  console.log(event.requestContext);
+
   const authorized = event.requestContext.authorizer !== null
     || event.headers.origin === 'https://dev.koekalenteri.snj.fi'
     || event.headers.origin === 'http://localhost:3000';
