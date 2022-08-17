@@ -1,3 +1,4 @@
+import { useAuthenticator } from '@aws-amplify/ui-react';
 import { CircularProgress } from '@mui/material';
 import { autorun, toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
@@ -13,6 +14,7 @@ import { AuthPage } from './AuthPage';
 export const EventEditPage = observer(function EventEditPage({create}: {create?: boolean}) {
   const params = useParams();
   const { t } = useTranslation();
+  const { user } = useAuthenticator(context => [context.user]);
   const { rootStore, publicStore, privateStore } = useStores();
   const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ export const EventEditPage = observer(function EventEditPage({create}: {create?:
           organizers={rootStore.organizerStore.organizers.map(o => o.toJSON())}
           onSave={async (event) => {
             try {
-              await privateStore.putEvent(event)
+              await privateStore.putEvent(event, user.getSignInUserSession()?.getIdToken().getJwtToken());
               navigate(ADMIN_EVENTS);
               enqueueSnackbar(t(`event.states.${event.state || 'draft'}`, { context: 'save' }), { variant: 'info' });
               return Promise.resolve(true);

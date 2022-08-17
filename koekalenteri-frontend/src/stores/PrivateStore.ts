@@ -50,9 +50,9 @@ export class PrivateStore {
     return this.events.find(e => e.id === id);
   }
 
-  async putEvent(event: Partial<Event>) {
+  async putEvent(event: Partial<Event>, token?: string) {
     const newEvent = !event.id;
-    const saved = await eventApi.putEvent(event);
+    const saved = await eventApi.putEvent(event, token);
     if (newEvent) {
       this.events.push(saved);
       this.newEvent = {};
@@ -66,12 +66,12 @@ export class PrivateStore {
     return saved;
   }
 
-  async deleteEvent(event: Partial<Event>) {
+  async deleteEvent(event: Partial<Event>, token?: string) {
     const index = this.events.findIndex(e => e.id === event.id);
     if (index > -1) {
       event.deletedAt = new Date();
       event.deletedBy = 'user';
-      const saved = await this.putEvent(event);
+      const saved = await this.putEvent(event, token);
       this.events.splice(index, 1);
       return saved;
     }

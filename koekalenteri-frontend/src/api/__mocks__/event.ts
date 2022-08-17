@@ -129,7 +129,7 @@ export async function getEvent(eventType: string, id: string): Promise<EventEx> 
   });
 }
 
-export async function putEvent(event: Event): Promise<EventEx> {
+export async function putEvent(event: Event, token?: string): Promise<EventEx> {
   return new Promise((resolve, reject) => {
     let fullEvent: EventEx | undefined;
     if (event) {

@@ -15,8 +15,12 @@ export async function getEvent(eventType: string, id: string, signal?: AbortSign
   return rehydrateEvent(jsonEvent);
 }
 
-export async function putEvent(event: Partial<Event>): Promise<EventEx> {
-  return rehydrateEvent(await http.post<Partial<Event>, JsonEvent>(PATH, event));
+export async function putEvent(event: Partial<Event>, token?: string): Promise<EventEx> {
+  return rehydrateEvent(await http.post<Partial<Event>, JsonEvent>(PATH, event, {
+    headers: {
+      Authorization: token ? `Bearer ${token}` : ''
+    }
+  }));
 }
 
 export async function getRegistrations(eventId: string, signal?: AbortSignal): Promise<Registration[]> {

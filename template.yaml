@@ -357,8 +357,8 @@ Resources:
             Path: /event
             Method: POST
             RestApiId: !Ref KoekalenteriApi
-            #Auth:
-            #  Authorizer: CognitoAuthorizer
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   GetRegistrationsFunction:
     Type: AWS::Serverless::Function

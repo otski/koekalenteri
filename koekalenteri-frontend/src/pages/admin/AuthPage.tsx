@@ -19,19 +19,18 @@ export const AuthPage = observer(function AuthPage({ children, title }: { childr
       setSessionStarted(new Date().toISOString());
     }
   });
-  useEffect(() => {
+
+  useEffect(() => autorun(() => {
     if (!rootStore.loaded) {
       rootStore.load();
     }
-    autorun(() => {
-      if (!publicStore.loaded) {
-        publicStore.load();
-      }
-      if (!privateStore.loaded) {
-        privateStore.load();
-      }
-    })
-  });
+    if (!publicStore.loaded) {
+      publicStore.load();
+    }
+    if (!privateStore.loaded) {
+      privateStore.load();
+    }
+  }));
 
   return (route !== 'authenticated' ? <Navigate to="/login" state={{ from: location }} replace /> :
     <>
