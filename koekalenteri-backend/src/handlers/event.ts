@@ -84,6 +84,8 @@ export const putRegistrationHandler = metricScope((metrics: MetricsLogger) =>
 
     const timestamp = new Date().toISOString();
     const username = getUsername(event);
+    console.log(event.headers);
+    console.log(event.requestContext);
     const origin = event.headers['Origin'];
 
     try {
