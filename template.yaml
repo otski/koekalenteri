@@ -283,6 +283,14 @@ Resources:
         Authorizers:
           CognitoAuthorizer:
             UserPoolArn: !Ref KoekalenteriUserPool
+      GatewayResponses:
+        UNAUTHORIZED:
+          StatusCode: 401
+          ResponseParameters:
+            Headers:
+              Access-Control-Expose-Headers: "'WWW-Authenticate'"
+              Access-Control-Allow-Origin: "'*'"
+              WWW-Authenticate: 'Bearer realm="koekalenteri-admin"'
 
   # API Functions
   GetEventsFunction:
